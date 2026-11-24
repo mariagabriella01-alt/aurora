@@ -1,0 +1,6 @@
+{
+  "name": "Abrigo da Alma",
+  "description": "Espaço online de acolhimento psicológico, desabafo seguro, saúde mental, fé em Deus e motivos para viver.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
