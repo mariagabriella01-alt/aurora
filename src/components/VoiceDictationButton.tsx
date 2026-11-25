@@ -287,6 +287,7 @@ export function VoiceDictationButton({
   return (
     <button
       type="button"
+      data-mic-control="true"
       onClick={handleToggle}
       disabled={transcribing}
       aria-pressed={listening}

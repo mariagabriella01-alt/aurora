@@ -22,6 +22,7 @@ export function SpeakButton({
   return (
     <button
       type="button"
+      data-speak-control="true"
       onClick={() => (isActive ? stopSpeaking() : speak(text, id))}
       aria-pressed={isActive}
       aria-busy={isLoading}

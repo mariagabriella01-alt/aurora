@@ -84,6 +84,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start sm:gap-2">
             <button
               type="button"
+              data-mic-control="true"
               onClick={() => (listeningCommand ? stopVoiceCommand() : startVoiceCommand())}
               aria-pressed={listeningCommand}
               className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[42px] sm:gap-2 sm:px-3.5 sm:py-2 sm:text-xs ${
@@ -116,7 +117,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
               }`}
             >
               <Ear className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Voz da Sophia: {autoReadAssistant ? 'Ligada' : 'Desligada'}</span>
+              <span>Voz inicial da Sophia: {autoReadAssistant ? 'Ligada' : 'Desligada'}</span>
             </button>
 
             <button

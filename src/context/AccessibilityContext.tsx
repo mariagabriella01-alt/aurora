@@ -58,7 +58,8 @@ export function AccessibilityProvider({
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [spokenCaption, setSpokenCaption] = useState<string | null>(null);
   const [speechError, setSpeechError] = useState<string | null>(null);
-  const [autoReadAssistant, setAutoReadAssistant] = useState(true);
+  const [autoReadAssistant, setAutoReadAssistantState] = useState(true);
+  const autoReadAssistantRef = useRef(true);
   const [easyVisualMode, setEasyVisualMode] = useState(false);
 
   const [listeningCommand, setListeningCommand] = useState(false);
@@ -73,6 +74,14 @@ export function AccessibilityProvider({
   const commandCancelledRef = useRef(false);
   const micInterruptHandlersRef = useRef<Map<string, () => void>>(new Map());
 
+  const setAutoReadAssistant = useCallback((val: boolean) => {
+    autoReadAssistantRef.current = val;
+    setAutoReadAssistantState(val);
+    if (!val) {
+      shopiaVoiceService.stop();
+    }
+  }, []);
+
   useEffect(() => {
     shopiaVoiceService.setCallbacks({
       onLoadingChange: setLoadingSpeechId,
@@ -80,6 +89,7 @@ export function AccessibilityProvider({
       onCaptionChange: setSpokenCaption,
       onErrorChange: setSpeechError,
     });
+    shopiaVoiceService.playInitialGreetingOnce(() => autoReadAssistantRef.current);
     const handlePageLeave = () => {
       shopiaVoiceService.stop();
     };
@@ -152,6 +162,7 @@ export function AccessibilityProvider({
 
   const claimMicrophone = useCallback(
     (ownerId: string) => {
+      shopiaVoiceService.cancelPendingGreetingAutoplay();
       if (ownerId !== 'voice-command') {
         stopVoiceCommand();
       }

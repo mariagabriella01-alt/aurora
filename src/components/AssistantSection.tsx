@@ -1,6 +1,7 @@
 import { MessageCircleHeart, RotateCcw, Send } from 'lucide-react';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { useAccessibility } from '../context/AccessibilityContext';
+import { INITIAL_SOPHIA_GREETING_TEXT } from '../services/shopiaVoiceService';
 import type { SophiaPromptRequest } from '../types';
 import { SpeakButton } from './SpeakButton';
 import { VoiceDictationButton } from './VoiceDictationButton';
@@ -18,7 +19,7 @@ interface AssistantSectionProps {
 const INITIAL_MESSAGE: ChatMessage = {
   id: 'init-1',
   role: 'model',
-  text: 'Oi, você está bem? Eu sou a Sophia, sua assistente virtual de acolhimento aqui na Aurora — um novo começo, uma nova esperança. Pode me contar o que está pesando hoje — seja vazio, trabalho demais, bullying na escola, comparação, superação de algum vício ou qualquer outra dor. Você não precisa enfrentar isso sem ser ouvido(a).',
+  text: INITIAL_SOPHIA_GREETING_TEXT,
 };
 
 const QUICK_PROMPTS = [
@@ -31,8 +32,7 @@ const QUICK_PROMPTS = [
 ];
 
 export function AssistantSection({ externalPromptRequest }: AssistantSectionProps) {
-  const { autoReadAssistant, clearSpeechError, prepareAudioForPlayback, speak, speechError, stopSpeaking } =
-    useAccessibility();
+  const { clearSpeechError, speechError, stopSpeaking } = useAccessibility();
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,6 +42,8 @@ export function AssistantSection({ externalPromptRequest }: AssistantSectionProp
   const messagesRef = useRef<ChatMessage[]>([INITIAL_MESSAGE]);
   const loadingRef = useRef(false);
   const lastHandledTriggerRef = useRef(0);
+  const requestControllerRef = useRef<AbortController | null>(null);
+  const conversationVersionRef = useRef(0);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -57,11 +59,22 @@ export function AssistantSection({ externalPromptRequest }: AssistantSectionProp
     }
   }, [messages, loading]);
 
+  useEffect(() => {
+    return () => {
+      requestControllerRef.current?.abort();
+    };
+  }, []);
+
   const requestReply = useCallback(
     async (
       historyToSend: ChatMessage[],
       recoveryContext?: SophiaPromptRequest['recoveryContext'],
     ) => {
+      requestControllerRef.current?.abort();
+      const controller = new AbortController();
+      requestControllerRef.current = controller;
+      const versionAtRequest = conversationVersionRef.current;
+
       setError(null);
       setLoading(true);
       loadingRef.current = true;
@@ -77,8 +90,19 @@ export function AssistantSection({ externalPromptRequest }: AssistantSectionProp
             messages: apiMessages,
             recoveryContext,
           }),
+          signal: controller.signal,
         });
-        const data = (await res.json()) as { reply?: string; error?: string };
+
+        let data: { reply?: string; error?: string } = {};
+        try {
+          data = (await res.json()) as { reply?: string; error?: string };
+        } catch {
+          data = {};
+        }
+
+        if (versionAtRequest !== conversationVersionRef.current) {
+          return;
+        }
 
         if (!res.ok || !data.reply) {
           setError(data.error || 'Não foi possível responder agora. Tente novamente.');
@@ -86,26 +110,31 @@ export function AssistantSection({ externalPromptRequest }: AssistantSectionProp
         }
 
         const replyId = `m-${Date.now()}`;
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: replyId,
-            role: 'model',
-            text: data.reply as string,
-          },
-        ]);
-
-        if (autoReadAssistant) {
-          speak(data.reply, replyId);
-        }
-      } catch {
+        const replyMsg: ChatMessage = {
+          id: replyId,
+          role: 'model',
+          text: data.reply,
+        };
+        setMessages((prev) => {
+          const next = [...prev, replyMsg];
+          messagesRef.current = next;
+          return next;
+        });
+      } catch (err) {
+        if ((err as { name?: string })?.name === 'AbortError') return;
+        if (versionAtRequest !== conversationVersionRef.current) return;
         setError('Erro de conexão ao falar com a Sophia. Tente novamente em instantes.');
       } finally {
-        setLoading(false);
-        loadingRef.current = false;
+        if (requestControllerRef.current === controller) {
+          requestControllerRef.current = null;
+        }
+        if (versionAtRequest === conversationVersionRef.current) {
+          setLoading(false);
+          loadingRef.current = false;
+        }
       }
     },
-    [autoReadAssistant, speak],
+    [],
   );
 
   const sendMessage = useCallback(
@@ -115,10 +144,6 @@ export function AssistantSection({ externalPromptRequest }: AssistantSectionProp
     ) => {
       const trimmed = textToSend.trim();
       if (!trimmed || loadingRef.current) return;
-
-      if (autoReadAssistant) {
-        prepareAudioForPlayback();
-      }
 
       const userMsg: ChatMessage = {
         id: `u-${Date.now()}`,
@@ -131,7 +156,7 @@ export function AssistantSection({ externalPromptRequest }: AssistantSectionProp
       setInput('');
       await requestReply(nextHistory, recoveryContext);
     },
-    [autoReadAssistant, prepareAudioForPlayback, requestReply],
+    [requestReply],
   );
 
   useEffect(() => {
@@ -153,6 +178,11 @@ export function AssistantSection({ externalPromptRequest }: AssistantSectionProp
   };
 
   const handleReset = () => {
+    conversationVersionRef.current += 1;
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = null;
+    loadingRef.current = false;
+    setLoading(false);
     stopSpeaking();
     const resetList = [INITIAL_MESSAGE];
     messagesRef.current = resetList;
@@ -243,9 +273,9 @@ export function AssistantSection({ externalPromptRequest }: AssistantSectionProp
                     >
                       {msg.text}
                     </div>
-                    {msg.role === 'model' && (
+                    {msg.role === 'model' && msg.id === 'init-1' && (
                       <div className="mt-1 sm:mt-1.5">
-                        <SpeakButton id={msg.id} text={msg.text} label="Ouvir Sophia" />
+                        <SpeakButton id={msg.id} text={msg.text} label="Ouvir saudação" />
                       </div>
                     )}
                   </div>

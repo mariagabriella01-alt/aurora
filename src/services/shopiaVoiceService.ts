@@ -20,6 +20,14 @@ const NON_RETRYABLE_CODES = new Set([
   'HTML_FALLBACK',
 ]);
 
+export const INITIAL_SOPHIA_GREETING_TEXT =
+  'Oi, você está bem? Eu sou a Sophia, sua assistente virtual de acolhimento aqui na Aurora — um novo começo, uma nova esperança. Pode me contar o que está pesando hoje — seja vazio, trabalho demais, bullying na escola, comparação, superação de algum vício ou qualquer outra dor. Você não precisa enfrentar isso sem ser ouvido(a).';
+
+const OFFICIAL_SHOPIA_GREETING_ASSET =
+  '/assets/aistudio/Oi__voc__est__bem__Eu_sou_a_So.._67203881.m4a';
+
+const INITIAL_GREETING_STORAGE_KEY = 'aurora_sophia_initial_greeting_played_v1';
+
 function decodeBase64ToBlob(base64Raw: string, mimeType: string): Blob | null {
   try {
     const cleaned = base64Raw.replace(/^data:audio\/[a-z0-9.+-]+;base64,/i, '').trim();
@@ -43,6 +51,9 @@ class ShopiaVoiceService {
   private activeVoiceTag: string | null = null;
   private seq = 0;
   private callbacks: ShopiaPlaybackCallbacks | null = null;
+  private initialGreetingStarted = false;
+  private initialGreetingPlayed = false;
+  private pendingGestureCleanup: (() => void) | null = null;
 
   public setCallbacks(callbacks: ShopiaPlaybackCallbacks | null): void {
     this.callbacks = callbacks;
@@ -56,6 +67,7 @@ class ShopiaVoiceService {
     if (!this.audioEl) {
       const el = new Audio();
       el.preload = 'auto';
+      el.loop = false;
       el.setAttribute('playsinline', 'true');
       this.audioEl = el;
     }
@@ -123,7 +135,15 @@ class ShopiaVoiceService {
     }
   }
 
+  public cancelPendingGreetingAutoplay(): void {
+    if (this.pendingGestureCleanup) {
+      this.pendingGestureCleanup();
+      this.pendingGestureCleanup = null;
+    }
+  }
+
   public stop(): void {
+    this.cancelPendingGreetingAutoplay();
     this.stopActive();
     this.callbacks?.onLoadingChange(null);
     this.callbacks?.onSpeakingChange(null);
@@ -357,10 +377,131 @@ class ShopiaVoiceService {
     return task;
   }
 
+  private hasPlayedGreetingBefore(): boolean {
+    if (this.initialGreetingPlayed) return true;
+    try {
+      return typeof window !== 'undefined' && window.sessionStorage?.getItem(INITIAL_GREETING_STORAGE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  private markGreetingPlayed(): void {
+    this.initialGreetingPlayed = true;
+    try {
+      if (typeof window !== 'undefined') {
+        window.sessionStorage?.setItem(INITIAL_GREETING_STORAGE_KEY, '1');
+      }
+    } catch {
+      // Ignore storage restrictions
+    }
+  }
+
+  private scheduleGreetingOnFirstGesture(enabledCheck?: () => boolean): void {
+    if (typeof window === 'undefined' || this.pendingGestureCleanup || this.hasPlayedGreetingBefore()) {
+      return;
+    }
+
+    const triggerOnce = (ev: Event) => {
+      const target = ev.target instanceof Element ? ev.target : null;
+      if (target?.closest('[data-mic-control="true"], [data-speak-control="true"]')) {
+        return;
+      }
+      this.cancelPendingGreetingAutoplay();
+      if (this.hasPlayedGreetingBefore()) return;
+      if (enabledCheck && !enabledCheck()) return;
+      this.initialGreetingStarted = false;
+      this.playInitialGreetingOnce(enabledCheck, true);
+    };
+
+    window.addEventListener('pointerdown', triggerOnce, { capture: true });
+    window.addEventListener('keydown', triggerOnce, { capture: true });
+
+    this.pendingGestureCleanup = () => {
+      window.removeEventListener('pointerdown', triggerOnce, true);
+      window.removeEventListener('keydown', triggerOnce, true);
+    };
+  }
+
+  public playInitialGreetingOnce(enabledCheck?: () => boolean, fromUserGesture = false): void {
+    if (!this.isSupported()) return;
+    if (this.hasPlayedGreetingBefore() || this.initialGreetingStarted) return;
+    if (enabledCheck && !enabledCheck()) return;
+
+    this.initialGreetingStarted = true;
+    this.stopActive();
+    const seq = this.seq;
+
+    this.callbacks?.onErrorChange(null);
+
+    void (async () => {
+      try {
+        let playSourceUrl = this.audioCache.get(INITIAL_SOPHIA_GREETING_TEXT);
+
+        if (!playSourceUrl) {
+          const controller = new AbortController();
+          this.abortController = controller;
+          try {
+            const blob = await this.fetchAudioBlobWithRetry(
+              INITIAL_SOPHIA_GREETING_TEXT,
+              controller.signal,
+            );
+            if (seq !== this.seq || controller.signal.aborted) return;
+            playSourceUrl = URL.createObjectURL(blob);
+            this.audioCache.set(INITIAL_SOPHIA_GREETING_TEXT, playSourceUrl);
+          } catch (err) {
+            if ((err as { name?: string })?.name === 'AbortError' || seq !== this.seq) {
+              return;
+            }
+            // Fallback strictly to Shopia's official recorded greeting audio asset
+            playSourceUrl = OFFICIAL_SHOPIA_GREETING_ASSET;
+          } finally {
+            if (this.abortController === controller) {
+              this.abortController = null;
+            }
+          }
+        }
+
+        if (seq !== this.seq) return;
+
+        const { ok, blocked } = await this.playAudioUrl(
+          playSourceUrl,
+          INITIAL_SOPHIA_GREETING_TEXT,
+          'init-1',
+          seq,
+        );
+
+        if (ok) {
+          this.markGreetingPlayed();
+          return;
+        }
+
+        if (seq === this.seq) {
+          this.callbacks?.onLoadingChange(null);
+          this.callbacks?.onSpeakingChange(null);
+          this.callbacks?.onCaptionChange(null);
+          if (blocked && !fromUserGesture) {
+            this.initialGreetingStarted = false;
+            this.scheduleGreetingOnFirstGesture(enabledCheck);
+          } else {
+            this.markGreetingPlayed();
+          }
+        }
+      } catch {
+        if (seq === this.seq) {
+          this.callbacks?.onLoadingChange(null);
+          this.callbacks?.onSpeakingChange(null);
+          this.callbacks?.onCaptionChange(null);
+        }
+      }
+    })();
+  }
+
   public speak(text: string, id = 'global'): void {
     const cleanText = text.trim();
     if (!cleanText) return;
 
+    this.cancelPendingGreetingAutoplay();
     this.stopActive();
     const seq = this.seq;
 
@@ -374,6 +515,9 @@ class ShopiaVoiceService {
       this.callbacks?.onLoadingChange(null);
       this.callbacks?.onSpeakingChange(id);
       void this.playAudioUrl(cachedUrl, cleanText, id, seq).then(({ ok, blocked }) => {
+        if (ok && id === 'init-1') {
+          this.markGreetingPlayed();
+        }
         if (!ok && seq === this.seq) {
           this.callbacks?.onSpeakingChange(null);
           this.callbacks?.onErrorChange(
@@ -395,22 +539,38 @@ class ShopiaVoiceService {
 
     void (async () => {
       try {
-        const blob = await this.fetchAudioBlobWithRetry(cleanText, controller.signal);
+        let objectUrl: string;
+        try {
+          const blob = await this.fetchAudioBlobWithRetry(cleanText, controller.signal);
+          if (seq !== this.seq || controller.signal.aborted) {
+            return;
+          }
+          objectUrl = URL.createObjectURL(blob);
+          if (this.audioCache.size >= 40) {
+            const oldest = this.audioCache.entries().next().value as [string, string] | undefined;
+            if (oldest) {
+              URL.revokeObjectURL(oldest[1]);
+              this.audioCache.delete(oldest[0]);
+            }
+          }
+          this.audioCache.set(cleanText, objectUrl);
+        } catch (fetchErr) {
+          if ((fetchErr as { name?: string })?.name === 'AbortError') return;
+          if (id === 'init-1' || cleanText === INITIAL_SOPHIA_GREETING_TEXT) {
+            objectUrl = OFFICIAL_SHOPIA_GREETING_ASSET;
+          } else {
+            throw fetchErr;
+          }
+        }
+
         if (seq !== this.seq || controller.signal.aborted) {
           return;
         }
 
-        const objectUrl = URL.createObjectURL(blob);
-        if (this.audioCache.size >= 40) {
-          const oldest = this.audioCache.entries().next().value as [string, string] | undefined;
-          if (oldest) {
-            URL.revokeObjectURL(oldest[1]);
-            this.audioCache.delete(oldest[0]);
-          }
-        }
-        this.audioCache.set(cleanText, objectUrl);
-
         const { ok, blocked } = await this.playAudioUrl(objectUrl, cleanText, id, seq);
+        if (ok && id === 'init-1') {
+          this.markGreetingPlayed();
+        }
         if (!ok && seq === this.seq) {
           this.callbacks?.onLoadingChange(null);
           this.callbacks?.onSpeakingChange(null);
