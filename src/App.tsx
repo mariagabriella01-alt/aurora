@@ -10,7 +10,7 @@ import { MentalHealthSection } from './components/MentalHealthSection';
 import { MinhaSuperacaoSection } from './components/MinhaSuperacaoSection';
 import { ReasonsToLiveSection } from './components/ReasonsToLiveSection';
 import { VentWallSection } from './components/VentWallSection';
-import { AccessibilityProvider } from './context/AccessibilityContext';
+import { AccessibilityProvider, useAccessibility } from './context/AccessibilityContext';
 import type {
   Prayer,
   ReasonToLive,
@@ -19,6 +19,28 @@ import type {
   Vent,
   VentCategory,
 } from './types';
+
+function GlobalVoiceAlert() {
+  const { speechError, clearSpeechError } = useAccessibility();
+  if (!speechError) return null;
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed bottom-4 left-3 right-3 z-50 mx-auto flex max-w-md items-start justify-between gap-3 rounded-xl border border-red-300 bg-red-50 px-3.5 py-2.5 text-xs text-red-900 shadow-lg sm:left-auto sm:right-5"
+    >
+      <span className="leading-relaxed">{speechError}</span>
+      <button
+        type="button"
+        onClick={clearSpeechError}
+        className="shrink-0 font-semibold text-red-900 underline underline-offset-2 cursor-pointer"
+      >
+        Fechar
+      </button>
+    </div>
+  );
+}
 
 export default function App() {
   const [vents, setVents] = useState<Vent[]>([]);
@@ -216,6 +238,7 @@ export default function App() {
         </main>
 
         <Footer />
+        <GlobalVoiceAlert />
       </div>
     </AccessibilityProvider>
   );

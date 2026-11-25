@@ -9,9 +9,7 @@ import {
   MicOff,
   PhoneCall,
   Sparkles,
-  Square,
   Sun,
-  Volume2,
 } from 'lucide-react';
 import { useAccessibility } from '../context/AccessibilityContext';
 
@@ -33,7 +31,6 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
     listeningCommand,
     lastCommandHeard,
     commandFeedback,
-    speak,
     stopSpeaking,
     startVoiceCommand,
     stopVoiceCommand,
@@ -42,43 +39,36 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
   const visualTiles = [
     {
       label: 'Desabafar',
-      spoken: 'Abrir espaço para desabafar falando ou escrevendo.',
       icon: HeartHandshake,
       action: onComposeVent,
     },
     {
       label: 'Sophia',
-      spoken: 'Conversar por voz ou texto com a assistente Sophia.',
       icon: MessageCircleHeart,
       action: () => onNavigateSection('assistente'),
     },
     {
       label: 'Superação',
-      spoken: 'Abrir o espaço Minha Superação para acompanhar dias e metas contra vícios.',
       icon: Award,
       action: () => onNavigateSection('superacao'),
     },
     {
       label: 'Respirar',
-      spoken: 'Fazer exercício visual de respiração e acalmar a mente.',
       icon: Brain,
       action: () => onNavigateSection('saude-mental'),
     },
     {
       label: 'Deus',
-      spoken: 'Abrir espaço de Deus, orações e versículos da Bíblia.',
       icon: Sparkles,
       action: () => onNavigateSection('espaco-de-deus'),
     },
     {
       label: 'Viver',
-      spoken: 'Ver motivos para viver e mensagens de esperança.',
       icon: Sun,
       action: () => onNavigateSection('motivos'),
     },
     {
       label: 'Ligar 188',
-      spoken: 'Ver telefone gratuito 188 para apoio imediato.',
       icon: PhoneCall,
       action: () => onNavigateSection('ajuda'),
     },
@@ -117,33 +107,6 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
 
             <button
               type="button"
-              onClick={() => {
-                if (speakingId === 'page-guide') {
-                  stopSpeaking();
-                } else {
-                  speak(
-                    'Oi, você está bem? Você está na Aurora, um novo começo, uma nova esperança. Toque no botão verde Comando de voz e diga desabafar, Sophia, superação, saúde mental, Deus, motivos ou ajuda. Você consegue, você não está sozinho.',
-                    'page-guide',
-                  );
-                }
-              }}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#DFCE91] bg-[#FFFDF4] px-2.5 py-1 text-[11px] font-semibold text-[#1C1917] transition-all duration-150 hover:border-[#13382C] active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[42px] sm:px-3.5 sm:py-2 sm:text-xs"
-            >
-              {speakingId === 'page-guide' ? (
-                <>
-                  <Square className="h-3 w-3 fill-current text-[#13382C]" aria-hidden="true" />
-                  <span>Parar voz</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="h-3.5 w-3.5 text-[#13382C]" aria-hidden="true" />
-                  <span>Ouvir guia</span>
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
               onClick={() => setAutoReadAssistant(!autoReadAssistant)}
               aria-pressed={autoReadAssistant}
               className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[42px] sm:px-3.5 sm:py-2 sm:text-xs ${
@@ -153,7 +116,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
               }`}
             >
               <Ear className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Leitura automática: {autoReadAssistant ? 'Ligada' : 'Desligada'}</span>
+              <span>Voz da Sophia: {autoReadAssistant ? 'Ligada' : 'Desligada'}</span>
             </button>
 
             <button
@@ -228,7 +191,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
                 Toque em um ícone para ir direto — ou fale pelo microfone
               </p>
               <p className="text-[10.5px] text-[#57534E] sm:text-xs">
-                Cada botão possui ícone visual claro e leitura em voz alta.
+                Cada botão possui ícone visual claro para navegar com facilidade.
               </p>
             </div>
             <div className="mt-2 grid grid-cols-3 gap-1.5 sm:mt-3 sm:grid-cols-4 sm:gap-3 lg:grid-cols-7">
@@ -238,10 +201,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
                   <button
                     key={tile.label}
                     type="button"
-                    onClick={() => {
-                      speak(tile.spoken, `tile-${tile.label}`);
-                      tile.action();
-                    }}
+                    onClick={tile.action}
                     className="flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-xl border border-[#EADCA6] bg-[#FEF9E6] px-1.5 py-2.5 text-center transition-all duration-150 hover:border-[#13382C] hover:bg-[#13382C]/5 active:scale-[0.97] cursor-pointer sm:min-h-[88px] sm:gap-2 sm:px-3 sm:py-4"
                   >
                     <Icon className="h-4.5 w-4.5 text-[#13382C] sm:h-7 sm:w-7" aria-hidden="true" />

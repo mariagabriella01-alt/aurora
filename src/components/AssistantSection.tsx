@@ -31,7 +31,7 @@ const QUICK_PROMPTS = [
 ];
 
 export function AssistantSection({ externalPromptRequest }: AssistantSectionProps) {
-  const { autoReadAssistant, clearSpeechError, prepareAudioForPlayback, speak, speechError } =
+  const { autoReadAssistant, clearSpeechError, prepareAudioForPlayback, speak, speechError, stopSpeaking } =
     useAccessibility();
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
@@ -153,6 +153,7 @@ export function AssistantSection({ externalPromptRequest }: AssistantSectionProp
   };
 
   const handleReset = () => {
+    stopSpeaking();
     const resetList = [INITIAL_MESSAGE];
     messagesRef.current = resetList;
     setMessages(resetList);

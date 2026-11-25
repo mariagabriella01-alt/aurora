@@ -342,7 +342,7 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
           {/* Respiração 4-7-8 */}
           <div className="flex flex-col justify-between rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:p-6 lg:col-span-5">
             <div>
-              <div className="flex items-center justify-between gap-2.5 sm:gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-4">
                 <h3 className="font-editorial text-lg font-medium text-[#1C1917] sm:text-2xl">
                   Respiração guiada 4-7-8
                 </h3>
@@ -569,7 +569,7 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
                     key={entry.id}
                     className="flex items-start justify-between gap-3 rounded-lg bg-[#FAF0CA] px-3 py-2 sm:gap-4 sm:px-4 sm:py-3"
                   >
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <p className="text-[11px] text-[#57534E] sm:text-xs">
                         <span className="font-semibold text-[#13382C]">{entry.mood}</span> ·{' '}
                         {formatRelativeTimePt(entry.createdAt)}

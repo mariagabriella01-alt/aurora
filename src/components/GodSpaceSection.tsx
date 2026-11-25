@@ -3,7 +3,6 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import type { Prayer, PrayerIntention } from '../types';
 import { formatRelativeTimePt } from '../utils/formatters';
 import { ResilientImage } from './ResilientImage';
-import { SpeakButton } from './SpeakButton';
 import { VoiceDictationButton } from './VoiceDictationButton';
 
 interface GodSpaceSectionProps {
@@ -473,16 +472,9 @@ export function GodSpaceSection({
             </div>
 
             <div className="mt-3.5 rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:mt-6 sm:p-8">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[10.5px] font-semibold tracking-wider uppercase text-[#8A5A10] sm:text-xs">
-                  {activeWord.reference}
-                </p>
-                <SpeakButton
-                  id={`god-word-${activeWord.id}`}
-                  label="Ouvir palavra"
-                  text={`${activeWord.reference}. ${activeWord.verse}. ${activeWord.reflection}. Oração: ${activeWord.prayer}`}
-                />
-              </div>
+              <p className="text-[10.5px] font-semibold tracking-wider uppercase text-[#8A5A10] sm:text-xs">
+                {activeWord.reference}
+              </p>
               <blockquote className="font-editorial mt-2 text-lg italic leading-snug text-[#1C1917] sm:mt-3 sm:text-[26px]">
                 {activeWord.verse}
               </blockquote>
@@ -811,12 +803,6 @@ export function GodSpaceSection({
                         </>
                       )}
                     </button>
-
-                    <SpeakButton
-                      id={`verse-${verse.id}`}
-                      label="Ouvir versículo"
-                      text={`${verse.reference}. ${verse.text}`}
-                    />
                   </div>
                 </article>
               );
@@ -934,7 +920,7 @@ export function GodSpaceSection({
                   <span>{formatRelativeTimePt(prayer.createdAt)}</span>
                 </div>
                 <p className="mt-2 text-[13px] leading-relaxed text-[#1C1917] sm:mt-2.5 sm:text-sm">{prayer.content}</p>
-                <div className="mt-3 border-t border-[#F4E9BF] pt-2.5 sm:mt-4 sm:pt-3">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#F4E9BF] pt-2.5 sm:mt-4 sm:pt-3">
                   <button
                     type="button"
                     onClick={() => handlePrayFor(prayer.id)}

@@ -25,10 +25,12 @@ export function VoiceDictationButton({
   onStatusChange,
   className = '',
 }: VoiceDictationButtonProps) {
-  const { prepareAudioForPlayback, stopSpeaking } = useAccessibility();
+  const { claimMicrophone, prepareAudioForPlayback, registerMicInterrupt, stopSpeaking } =
+    useAccessibility();
   const [listening, setListening] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
 
+  const micIdRef = useRef(`dictation-${Math.random().toString(36).slice(2, 9)}`);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -54,7 +56,26 @@ export function VoiceDictationButton({
   };
 
   useEffect(() => {
+    const unregister = registerMicInterrupt(micIdRef.current, () => {
+      cancelledRef.current = true;
+      try {
+        recognitionRef.current?.stop();
+      } catch {
+        // Ignore
+      }
+      try {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+        }
+      } catch {
+        // Ignore
+      }
+      stopMediaStream();
+      setListening(false);
+    });
+
     return () => {
+      unregister();
       cancelledRef.current = true;
       try {
         recognitionRef.current?.stop();
@@ -70,7 +91,7 @@ export function VoiceDictationButton({
       }
       stopMediaStream();
     };
-  }, []);
+  }, [registerMicInterrupt]);
 
   const startMediaRecordingFallback = async () => {
     if (!isMediaRecordingSupported()) {
@@ -187,6 +208,8 @@ export function VoiceDictationButton({
       onStatusChange?.(null);
       return;
     }
+
+    claimMicrophone(micIdRef.current);
 
     if (!isAnyVoiceInputSupported()) {
       onStatusChange?.(

@@ -2,7 +2,6 @@ import { Heart, Lock, MessageCircle, PhoneCall, Send, Trash2 } from 'lucide-reac
 import { FormEvent, useEffect, useState } from 'react';
 import type { Vent, VentCategory } from '../types';
 import { formatRelativeTimePt } from '../utils/formatters';
-import { SpeakButton } from './SpeakButton';
 import { VoiceDictationButton } from './VoiceDictationButton';
 
 interface VentWallSectionProps {
@@ -526,12 +525,6 @@ export function VentWallSection({
                           Apoiar com palavras ({vent.replies.length})
                         </span>
                       </button>
-
-                      <SpeakButton
-                        id={`vent-read-${vent.id}`}
-                        label="Ouvir desabafo"
-                        text={`${vent.author} sobre ${vent.category}: ${vent.content}`}
-                      />
                     </div>
 
                     {vent.replies.length > 0 && (

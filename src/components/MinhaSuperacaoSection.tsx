@@ -15,7 +15,6 @@ import {
 import { FormEvent, useEffect, useState } from 'react';
 import { useAccessibility } from '../context/AccessibilityContext';
 import type { RecoveryGoal, SophiaPromptRequest } from '../types';
-import { SpeakButton } from './SpeakButton';
 
 interface MinhaSuperacaoSectionProps {
   onAskSophia: (request: Omit<SophiaPromptRequest, 'trigger'>) => void;
@@ -295,16 +294,9 @@ export function MinhaSuperacaoSection({ onAskSophia }: MinhaSuperacaoSectionProp
             onSubmit={handleCreateGoal}
             className="animate-fade-soft mt-4 rounded-2xl border border-[#DFCE91] bg-[#FEF9E6] p-3.5 sm:mt-7 sm:p-6"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-editorial text-lg font-medium text-[#1C1917] sm:text-2xl">
-                Qual hábito ou vício você quer superar hoje?
-              </h3>
-              <SpeakButton
-                id="superacao-form-guide"
-                label="Ouvir orientação"
-                text="Escolha ou escreva o hábito que você deseja superar, informe a data em que começou ou escolha hoje, e salve seu objetivo. Tudo fica guardado com privacidade apenas no seu aparelho."
-              />
-            </div>
+            <h3 className="font-editorial text-lg font-medium text-[#1C1917] sm:text-2xl">
+              Qual hábito ou vício você quer superar hoje?
+            </h3>
 
             <div className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-3.5 sm:gap-2">
               {HABIT_SUGGESTIONS.map((suggestion) => (
@@ -527,21 +519,6 @@ export function MinhaSuperacaoSection({ onAskSophia }: MinhaSuperacaoSectionProp
                     </div>
 
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                      <SpeakButton
-                        id={`goal-summary-${goal.id}`}
-                        label="Ouvir resumo"
-                        text={`${goal.habitName}. Você está há ${daysClean} ${
-                          daysClean === 1 ? 'dia' : 'dias'
-                        } e ${hoursClean} ${
-                          hoursClean === 1 ? 'hora' : 'horas'
-                        } nessa caminhada. Seu recorde pessoal é de ${bestDays} ${
-                          bestDays === 1 ? 'dia' : 'dias'
-                        }. ${
-                          latestUnlocked
-                            ? latestUnlocked.celebration
-                            : 'Cada hora conta muito. Continue firme, você não está sozinho.'
-                        }`}
-                      />
 
                       {confirmDeleteId === goal.id ? (
                         <div className="inline-flex items-center gap-1 rounded-lg border border-red-300 bg-red-50 px-2 py-1 text-[11px]">
@@ -635,35 +612,21 @@ export function MinhaSuperacaoSection({ onAskSophia }: MinhaSuperacaoSectionProp
                   {/* Mensagem carinhosa pós-recaída */}
                   {recentlyRelapsed && (
                     <div className="animate-fade-soft mt-3 rounded-xl border border-[#DFCE91] bg-[#FAF0CA] p-3 sm:mt-4 sm:p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-xs font-semibold leading-relaxed text-[#5C3A21] sm:text-sm">
-                          “Uma recaída não apaga todo o seu progresso. Recomeçar também é uma forma de
-                          vencer.”
-                        </p>
-                        <SpeakButton
-                          id={`relapse-encouragement-${goal.id}`}
-                          label="Ouvir apoio"
-                          text="Uma recaída não apaga todo o seu progresso. Recomeçar também é uma forma de vencer. Respire fundo, seu recorde e tudo o que você aprendeu continuam com você."
-                        />
-                      </div>
+                      <p className="text-xs font-semibold leading-relaxed text-[#5C3A21] sm:text-sm">
+                        “Uma recaída não apaga todo o seu progresso. Recomeçar também é uma forma de
+                        vencer.”
+                      </p>
                     </div>
                   )}
 
                   {/* Celebração de conquista recente */}
                   {latestUnlocked && (
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#13382C]/25 bg-[#13382C]/5 px-3 py-2.5 sm:mt-4 sm:px-4 sm:py-3">
-                      <div className="flex items-start gap-2">
-                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#13382C]" aria-hidden="true" />
-                        <p className="text-xs leading-relaxed text-[#13382C] sm:text-sm">
-                          <strong>Conquista de {latestUnlocked.title}:</strong>{' '}
-                          {latestUnlocked.celebration}
-                        </p>
-                      </div>
-                      <SpeakButton
-                        id={`milestone-win-${goal.id}-${latestUnlocked.days}`}
-                        label="Ouvir conquista"
-                        text={latestUnlocked.celebration}
-                      />
+                    <div className="mt-3 flex items-start gap-2 rounded-xl border border-[#13382C]/25 bg-[#13382C]/5 px-3 py-2.5 sm:mt-4 sm:px-4 sm:py-3">
+                      <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#13382C]" aria-hidden="true" />
+                      <p className="text-xs leading-relaxed text-[#13382C] sm:text-sm">
+                        <strong>Conquista de {latestUnlocked.title}:</strong>{' '}
+                        {latestUnlocked.celebration}
+                      </p>
                     </div>
                   )}
 

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { shopiaVoiceService } from '../services/shopiaVoiceService';
 import {
   getMicrophoneErrorMessage,
   getSpeechRecognitionConstructor,
@@ -16,6 +17,7 @@ export { getSpeechRecognitionConstructor, type SpeechRecognitionLike };
 interface AccessibilityContextValue {
   speechOutputSupported: boolean;
   speechInputSupported: boolean;
+  loadingSpeechId: string | null;
   speakingId: string | null;
   spokenCaption: string | null;
   speechError: string | null;
@@ -32,6 +34,8 @@ interface AccessibilityContextValue {
   stopSpeaking: () => void;
   startVoiceCommand: () => void;
   stopVoiceCommand: () => void;
+  registerMicInterrupt: (id: string, stopFn: () => void) => () => void;
+  claimMicrophone: (ownerId: string) => void;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextValue | null>(null);
@@ -47,9 +51,10 @@ export function AccessibilityProvider({
   onNavigateSection,
   onComposeVent,
 }: AccessibilityProviderProps) {
-  const speechOutputSupported = typeof window !== 'undefined' && typeof Audio !== 'undefined';
+  const speechOutputSupported = shopiaVoiceService.isSupported();
   const speechInputSupported = isAnyVoiceInputSupported();
 
+  const [loadingSpeechId, setLoadingSpeechId] = useState<string | null>(null);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [spokenCaption, setSpokenCaption] = useState<string | null>(null);
   const [speechError, setSpeechError] = useState<string | null>(null);
@@ -66,12 +71,26 @@ export function AccessibilityProvider({
   const commandChunksRef = useRef<Blob[]>([]);
   const commandTimerRef = useRef<number | null>(null);
   const commandCancelledRef = useRef(false);
+  const micInterruptHandlersRef = useRef<Map<string, () => void>>(new Map());
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const ttsAbortRef = useRef<AbortController | null>(null);
-  const audioCacheRef = useRef<Map<string, string>>(new Map());
-  const activeVoiceTagRef = useRef<string | null>(null);
-  const speechSeqRef = useRef(0);
+  useEffect(() => {
+    shopiaVoiceService.setCallbacks({
+      onLoadingChange: setLoadingSpeechId,
+      onSpeakingChange: setSpeakingId,
+      onCaptionChange: setSpokenCaption,
+      onErrorChange: setSpeechError,
+    });
+    const handlePageLeave = () => {
+      shopiaVoiceService.stop();
+    };
+    window.addEventListener('pagehide', handlePageLeave);
+    window.addEventListener('beforeunload', handlePageLeave);
+    return () => {
+      window.removeEventListener('pagehide', handlePageLeave);
+      window.removeEventListener('beforeunload', handlePageLeave);
+      shopiaVoiceService.destroy();
+    };
+  }, []);
 
   const clearSpeechError = useCallback(() => {
     setSpeechError(null);
@@ -94,394 +113,24 @@ export function AccessibilityProvider({
     }
   }, []);
 
-  const SILENT_WAV_URI =
-    'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
-
-  const getOrCreatePlayer = useCallback(() => {
-    if (!audioRef.current) {
-      const el = new Audio();
-      el.preload = 'auto';
-      el.setAttribute('playsinline', 'true');
-      audioRef.current = el;
-    }
-    return audioRef.current;
-  }, []);
-
-  const unlockMobileAudio = useCallback(() => {
-    try {
-      const player = getOrCreatePlayer();
-      if (
-        !player.paused &&
-        player.currentTime > 0 &&
-        player.src &&
-        !player.src.startsWith('data:audio/wav')
-      ) {
-        return;
-      }
-      player.muted = true;
-      player.src = SILENT_WAV_URI;
-      const p = player.play();
-      if (p && typeof p.then === 'function') {
-        p.then(() => {
-          player.pause();
-          player.muted = false;
-        }).catch(() => {
-          player.muted = false;
-        });
-      } else {
-        player.muted = false;
-      }
-    } catch {
-      // Ignore unlock issues
-    }
-  }, [getOrCreatePlayer]);
-
   const prepareAudioForPlayback = useCallback(() => {
-    unlockMobileAudio();
-  }, [unlockMobileAudio]);
-
-  const clearAudioCache = useCallback(() => {
-    for (const url of audioCacheRef.current.values()) {
-      try {
-        URL.revokeObjectURL(url);
-      } catch {
-        // Ignore revoke errors
-      }
-    }
-    audioCacheRef.current.clear();
-  }, []);
-
-  const stopActiveAudio = useCallback(() => {
-    speechSeqRef.current += 1;
-    if (ttsAbortRef.current) {
-      ttsAbortRef.current.abort();
-      ttsAbortRef.current = null;
-    }
-    if (audioRef.current) {
-      try {
-        audioRef.current.onended = null;
-        audioRef.current.onerror = null;
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      } catch {
-        // Ignore audio stop errors
-      }
-    }
+    shopiaVoiceService.unlockAudio();
   }, []);
 
   const stopSpeaking = useCallback(() => {
-    stopActiveAudio();
-    setSpeakingId(null);
-    setSpokenCaption(null);
-  }, [stopActiveAudio]);
+    shopiaVoiceService.stop();
+  }, []);
 
-  const playAudioUrl = useCallback(
-    (
-      url: string,
-      text: string,
-      id: string,
-      seq: number,
-    ): Promise<{ ok: boolean; blocked?: boolean }> => {
-      return new Promise((resolve) => {
-        if (seq !== speechSeqRef.current) {
-          resolve({ ok: false });
-          return;
-        }
-        try {
-          const audio = getOrCreatePlayer();
-          audio.onended = null;
-          audio.onerror = null;
-          audio.muted = false;
-          audio.playbackRate = 1.0;
-          audio.pause();
-          audio.src = url;
-          audio.currentTime = 0;
+  const speak = useCallback((text: string, id = 'global') => {
+    shopiaVoiceService.speak(text, id);
+  }, []);
 
-          audio.onended = () => {
-            if (seq === speechSeqRef.current) {
-              setSpeakingId(null);
-            }
-          };
-
-          audio.onerror = () => {
-            if (seq === speechSeqRef.current) {
-              setSpeakingId(null);
-            }
-            resolve({ ok: false });
-          };
-
-          setSpeakingId(id);
-          setSpokenCaption(text);
-          const playPromise = audio.play();
-          if (playPromise && typeof playPromise.then === 'function') {
-            playPromise
-              .then(() => {
-                if (seq !== speechSeqRef.current) {
-                  try {
-                    audio.pause();
-                  } catch {
-                    // Ignore
-                  }
-                  resolve({ ok: false });
-                  return;
-                }
-                resolve({ ok: true });
-              })
-              .catch((err: unknown) => {
-                const name = (err as { name?: string })?.name || '';
-                resolve({ ok: false, blocked: name === 'NotAllowedError' });
-              });
-          } else {
-            resolve({ ok: true });
-          }
-        } catch {
-          resolve({ ok: false });
-        }
-      });
-    },
-    [getOrCreatePlayer],
-  );
-
-  const speak = useCallback(
-    (text: string, id = 'global') => {
-      const cleanText = text.trim();
-      if (!cleanText) return;
-
-      stopActiveAudio();
-      const seq = speechSeqRef.current;
-
-      setSpeechError(null);
-      setSpeakingId(id);
-      setSpokenCaption(cleanText);
-
-      const cachedUrl = audioCacheRef.current.get(cleanText);
-      if (cachedUrl) {
-        audioCacheRef.current.delete(cleanText);
-        audioCacheRef.current.set(cleanText, cachedUrl);
-        void playAudioUrl(cachedUrl, cleanText, id, seq).then(({ ok, blocked }) => {
-          if (!ok && seq === speechSeqRef.current) {
-            setSpeakingId(null);
-            if (blocked) {
-              setSpeechError('Toque em "Ouvir Sophia" para iniciar a reprodução neste aparelho.');
-            } else {
-              setSpeechError('Não foi possível reproduzir o áudio neste navegador.');
-            }
-          }
-        });
-        return;
-      }
-
-      unlockMobileAudio();
-
-      const controller = new AbortController();
-      ttsAbortRef.current = controller;
-
-      void (async () => {
-        try {
-          const res = await fetch('/api/tts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            cache: 'no-store',
-            body: JSON.stringify({ text: cleanText.slice(0, 2200) }),
-            signal: controller.signal,
-          });
-
-          const contentType = (res.headers.get('content-type') || '').toLowerCase();
-
-          if (!res.ok) {
-            let apiError = 'Não foi possível gerar o áudio com a voz exclusiva da Shopia agora.';
-            try {
-              const errData = (await res.json()) as { error?: string };
-              if (errData?.error) {
-                apiError = errData.error;
-              }
-            } catch {
-              if (res.status === 404) {
-                apiError =
-                  'O serviço de voz da Shopia (/api/tts) não foi encontrado neste servidor.';
-              }
-            }
-            if (seq === speechSeqRef.current && !controller.signal.aborted) {
-              setSpeakingId(null);
-              setSpeechError(apiError);
-            }
-            return;
-          }
-
-          if (!contentType.includes('audio/')) {
-            if (seq === speechSeqRef.current && !controller.signal.aborted) {
-              setSpeakingId(null);
-              setSpeechError(
-                'O servidor não retornou um áudio válido da Shopia.',
-              );
-            }
-            return;
-          }
-
-          const voiceTag = res.headers.get('x-aurora-voice-id');
-          if (voiceTag && activeVoiceTagRef.current && activeVoiceTagRef.current !== voiceTag) {
-            clearAudioCache();
-          }
-          if (voiceTag) {
-            activeVoiceTagRef.current = voiceTag;
-          }
-
-          const blob = await res.blob();
-          if (seq !== speechSeqRef.current || controller.signal.aborted) {
-            return;
-          }
-
-          const objectUrl = URL.createObjectURL(blob);
-          if (audioCacheRef.current.size >= 40) {
-            const oldest = audioCacheRef.current.entries().next().value as
-              | [string, string]
-              | undefined;
-            if (oldest) {
-              URL.revokeObjectURL(oldest[1]);
-              audioCacheRef.current.delete(oldest[0]);
-            }
-          }
-          audioCacheRef.current.set(cleanText, objectUrl);
-
-          const { ok, blocked } = await playAudioUrl(objectUrl, cleanText, id, seq);
-          if (!ok && seq === speechSeqRef.current) {
-            setSpeakingId(null);
-            if (blocked) {
-              setSpeechError('Toque em "Ouvir Sophia" para iniciar o áudio neste aparelho.');
-            } else {
-              setSpeechError('Não foi possível reproduzir o áudio gerado neste aparelho.');
-            }
-          }
-        } catch (err) {
-          if ((err as { name?: string })?.name === 'AbortError') return;
-          if (seq === speechSeqRef.current) {
-            setSpeakingId(null);
-            setSpeechError('Erro de conexão ao gerar a voz exclusiva da Shopia.');
-          }
-        } finally {
-          if (ttsAbortRef.current === controller) {
-            ttsAbortRef.current = null;
-          }
-        }
-      })();
-    },
-    [clearAudioCache, playAudioUrl, stopActiveAudio, unlockMobileAudio],
-  );
-
-  const executeVoiceCommand = useCallback(
-    (rawTranscript: string) => {
-      const normalized = rawTranscript
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-
-      setLastCommandHeard(rawTranscript);
-
-      if (normalized.includes('parar') || normalized.includes('silencio')) {
-        stopSpeaking();
-        setCommandFeedback('Áudio interrompido.');
-        return;
-      }
-
-      if (
-        normalized.includes('ler') ||
-        normalized.includes('ouvir') ||
-        normalized.includes('falar tudo')
-      ) {
-        const welcome =
-          'Oi, você está bem? Você está na Aurora, um novo começo, uma nova esperança. Aqui você pode desabafar, conversar com a assistente Sophia, acompanhar sua jornada em Minha Superação, respirar com calma, ter um momento com Deus e lembrar motivos para viver.';
-        speak(welcome, 'welcome-summary');
-        setCommandFeedback('Lendo boas-vindas em voz alta.');
-        return;
-      }
-
-      if (normalized.includes('desabaf') || normalized.includes('mural') || normalized.includes('escrever')) {
-        onComposeVent();
-        speak('Abrindo o espaço para você desabafar.', 'nav-vent');
-        setCommandFeedback('Indo para Desabafar.');
-        return;
-      }
-
-      if (
-        normalized.includes('assistent') ||
-        normalized.includes('sophia') ||
-        normalized.includes('sofia') ||
-        normalized.includes('convers')
-      ) {
-        onNavigateSection('assistente');
-        speak('Abrindo a conversa com a assistente Sophia.', 'nav-assistant');
-        setCommandFeedback('Indo para a Sophia.');
-        return;
-      }
-
-      if (
-        normalized.includes('supera') ||
-        normalized.includes('vicio') ||
-        normalized.includes('habito') ||
-        normalized.includes('recaida')
-      ) {
-        onNavigateSection('superacao');
-        speak('Abrindo o espaço Minha Superação para acompanhar seu progresso.', 'nav-recovery');
-        setCommandFeedback('Indo para Minha Superação.');
-        return;
-      }
-
-      if (
-        normalized.includes('saude') ||
-        normalized.includes('respir') ||
-        normalized.includes('vazio') ||
-        normalized.includes('trabalho') ||
-        normalized.includes('bullying') ||
-        normalized.includes('comparacao')
-      ) {
-        onNavigateSection('saude-mental');
-        speak('Abrindo os cuidados de saúde mental e respiração.', 'nav-mental');
-        setCommandFeedback('Indo para Saúde Mental.');
-        return;
-      }
-
-      if (
-        normalized.includes('deus') ||
-        normalized.includes('oracao') ||
-        normalized.includes('orar') ||
-        normalized.includes('biblia') ||
-        normalized.includes('versiculo')
-      ) {
-        onNavigateSection('espaco-de-deus');
-        speak('Abrindo o Espaço de Deus, orações e versículos da Bíblia.', 'nav-god');
-        setCommandFeedback('Indo para o Espaço de Deus.');
-        return;
-      }
-
-      if (
-        normalized.includes('motivo') ||
-        normalized.includes('viver') ||
-        normalized.includes('esperanca')
-      ) {
-        onNavigateSection('motivos');
-        speak('Abrindo os motivos para viver e mensagens de esperança.', 'nav-reasons');
-        setCommandFeedback('Indo para Motivos para Viver.');
-        return;
-      }
-
-      if (
-        normalized.includes('ajuda') ||
-        normalized.includes('socorro') ||
-        normalized.includes('188') ||
-        normalized.includes('cvv')
-      ) {
-        onNavigateSection('ajuda');
-        speak('Abrindo os telefones de apoio imediato. No Brasil, ligue 188 gratuitamente.', 'nav-help');
-        setCommandFeedback('Indo para Ajuda Imediata (188).');
-        return;
-      }
-
-      setCommandFeedback(
-        `Ouvi "${rawTranscript}". Diga: "desabafar", "Sophia", "superação", "saúde mental", "Deus", "motivos" ou "ajuda".`,
-      );
-    },
-    [onComposeVent, onNavigateSection, speak, stopSpeaking],
-  );
+  const registerMicInterrupt = useCallback((id: string, stopFn: () => void) => {
+    micInterruptHandlersRef.current.set(id, stopFn);
+    return () => {
+      micInterruptHandlersRef.current.delete(id);
+    };
+  }, []);
 
   const stopVoiceCommand = useCallback(() => {
     try {
@@ -501,10 +150,131 @@ export function AccessibilityProvider({
     setListeningCommand(false);
   }, [stopCommandStream]);
 
+  const claimMicrophone = useCallback(
+    (ownerId: string) => {
+      if (ownerId !== 'voice-command') {
+        stopVoiceCommand();
+      }
+      for (const [id, stopHandler] of micInterruptHandlersRef.current.entries()) {
+        if (id !== ownerId) {
+          try {
+            stopHandler();
+          } catch {
+            // Ignore cleanup errors
+          }
+        }
+      }
+    },
+    [stopVoiceCommand],
+  );
+
+  const executeVoiceCommand = useCallback(
+    (rawTranscript: string) => {
+      const normalized = rawTranscript
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+      setLastCommandHeard(rawTranscript);
+
+      if (normalized.includes('parar') || normalized.includes('silencio')) {
+        stopSpeaking();
+        setCommandFeedback('Áudio interrompido.');
+        return;
+      }
+
+      if (normalized.includes('inicio') || normalized.includes('topo')) {
+        onNavigateSection('inicio');
+        setCommandFeedback('Indo para o Início.');
+        return;
+      }
+
+      if (normalized.includes('desabaf') || normalized.includes('mural') || normalized.includes('escrever')) {
+        onComposeVent();
+        setCommandFeedback('Indo para Desabafar.');
+        return;
+      }
+
+      if (
+        normalized.includes('assistent') ||
+        normalized.includes('sophia') ||
+        normalized.includes('shopia') ||
+        normalized.includes('sofia') ||
+        normalized.includes('convers')
+      ) {
+        onNavigateSection('assistente');
+        setCommandFeedback('Indo para a assistente Sophia.');
+        return;
+      }
+
+      if (
+        normalized.includes('supera') ||
+        normalized.includes('vicio') ||
+        normalized.includes('habito') ||
+        normalized.includes('recaida')
+      ) {
+        onNavigateSection('superacao');
+        setCommandFeedback('Indo para Minha Superação.');
+        return;
+      }
+
+      if (
+        normalized.includes('saude') ||
+        normalized.includes('respir') ||
+        normalized.includes('vazio') ||
+        normalized.includes('trabalho') ||
+        normalized.includes('bullying') ||
+        normalized.includes('comparacao')
+      ) {
+        onNavigateSection('saude-mental');
+        setCommandFeedback('Indo para Saúde Mental.');
+        return;
+      }
+
+      if (
+        normalized.includes('deus') ||
+        normalized.includes('oracao') ||
+        normalized.includes('orar') ||
+        normalized.includes('biblia') ||
+        normalized.includes('versiculo')
+      ) {
+        onNavigateSection('espaco-de-deus');
+        setCommandFeedback('Indo para o Espaço de Deus.');
+        return;
+      }
+
+      if (
+        normalized.includes('motivo') ||
+        normalized.includes('viver') ||
+        normalized.includes('esperanca')
+      ) {
+        onNavigateSection('motivos');
+        setCommandFeedback('Indo para Motivos para Viver.');
+        return;
+      }
+
+      if (
+        normalized.includes('ajuda') ||
+        normalized.includes('socorro') ||
+        normalized.includes('188') ||
+        normalized.includes('cvv')
+      ) {
+        onNavigateSection('ajuda');
+        setCommandFeedback('Indo para Ajuda Imediata (188).');
+        return;
+      }
+
+      setCommandFeedback(
+        `Ouvi "${rawTranscript}". Diga: "desabafar", "Sophia", "superação", "saúde mental", "Deus", "motivos", "ajuda" ou "parar".`,
+      );
+    },
+    [onComposeVent, onNavigateSection, stopSpeaking],
+  );
+
   const startCommandRecorderFallback = useCallback(async () => {
     if (!isMediaRecordingSupported()) {
       setCommandFeedback(
-        'O reconhecimento de voz não está disponível neste navegador. Use os botões visuais ou toque em Ouvir guia.',
+        'O reconhecimento de voz não está disponível neste navegador. Use os botões visuais ou converse por texto com a Sophia.',
       );
       return;
     }
@@ -588,6 +358,7 @@ export function AccessibilityProvider({
   }, [executeVoiceCommand, stopCommandStream]);
 
   const startVoiceCommand = useCallback(() => {
+    claimMicrophone('voice-command');
     prepareAudioForPlayback();
     stopSpeaking();
 
@@ -661,7 +432,13 @@ export function AccessibilityProvider({
         setCommandFeedback('Não foi possível iniciar o microfone neste navegador.');
       }
     }
-  }, [executeVoiceCommand, prepareAudioForPlayback, startCommandRecorderFallback, stopSpeaking]);
+  }, [
+    claimMicrophone,
+    executeVoiceCommand,
+    prepareAudioForPlayback,
+    startCommandRecorderFallback,
+    stopSpeaking,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -672,19 +449,18 @@ export function AccessibilityProvider({
           commandRecorderRef.current.stop();
         }
         stopCommandStream();
-        stopActiveAudio();
-        clearAudioCache();
       } catch {
         // Ignore cleanup errors
       }
     };
-  }, [clearAudioCache, stopActiveAudio, stopCommandStream]);
+  }, [stopCommandStream]);
 
   return (
     <AccessibilityContext.Provider
       value={{
         speechOutputSupported,
         speechInputSupported,
+        loadingSpeechId,
         speakingId,
         spokenCaption,
         speechError,
@@ -701,6 +477,8 @@ export function AccessibilityProvider({
         stopSpeaking,
         startVoiceCommand,
         stopVoiceCommand,
+        registerMicInterrupt,
+        claimMicrophone,
       }}
     >
       {children}

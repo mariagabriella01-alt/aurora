@@ -1,12 +1,8 @@
 import { Check, Share2 } from 'lucide-react';
 import { useState } from 'react';
-import { SpeakButton } from './SpeakButton';
 import { SunflowerLogo } from './SunflowerLogo';
 
 const SHARED_APP_URL = 'https://ais-pre-wslxfozirwnrd2ujbjfb7u-928246110793.us-east1.run.app';
-
-const CREATOR_STORY =
-  'Por que eu criei a Aurora: Eu criei a Aurora porque acredito que ninguém merece sofrer, porque se sentir sozinho é a pior sensação do mundo. Coloquei o espaço de Deus porque Deus sempre esteve com vocês e nunca nos abandonou. A Aurora foi criada para ajudar — essa ideia nasceu porque eu sempre ajudei as pessoas e quero continuar assim. Não se esqueçam: vocês não estão sós. Deus está com vocês e eu também. Beijos da criadora, Maria Gabriella dos Santos Silva. Você consegue, você não está sozinho.';
 
 function getShareUrl(): string {
   if (typeof window === 'undefined') return SHARED_APP_URL;
@@ -67,16 +63,9 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-3 sm:px-6">
         <div className="mb-5 grid grid-cols-1 gap-4 rounded-2xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:mb-10 sm:gap-8 sm:p-10 lg:grid-cols-12 lg:items-center">
           <div className="lg:col-span-7">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[10.5px] font-medium tracking-widest uppercase text-[#8A5A10] sm:text-xs">
-                Por que eu criei a Aurora
-              </p>
-              <SpeakButton
-                id="creator-letter"
-                label="Ouvir mensagem da criadora"
-                text={CREATOR_STORY}
-              />
-            </div>
+            <p className="text-[10.5px] font-medium tracking-widest uppercase text-[#8A5A10] sm:text-xs">
+              Por que eu criei a Aurora
+            </p>
 
             <p className="mt-2.5 text-[13.5px] leading-[1.6] text-[#292524] sm:mt-4 sm:text-base sm:leading-[1.75]">
               Eu criei a Aurora porque acredito que ninguém merece sofrer — porque se sentir

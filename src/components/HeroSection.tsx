@@ -1,6 +1,5 @@
 import { ArrowRight } from 'lucide-react';
 import { ResilientImage } from './ResilientImage';
-import { SpeakButton } from './SpeakButton';
 import { SunflowerLogo } from './SunflowerLogo';
 
 interface HeroSectionProps {
@@ -53,16 +52,9 @@ export function HeroSection({ onStartVenting }: HeroSectionProps) {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-3">
-                <p className="font-editorial text-lg font-semibold italic text-[#13382C] sm:text-3xl">
-                  Oi, você está bem?
-                </p>
-                <SpeakButton
-                  id="hero-welcome"
-                  label="Ouvir boas-vindas"
-                  text="Oi, você está bem? Você está no site Aurora: um novo começo, uma nova esperança. Um lugar seguro para esvaziar a dor, acalmar a mente e reencontrar motivos para viver."
-                />
-              </div>
+              <p className="font-editorial text-center text-lg font-semibold italic text-[#13382C] sm:text-left sm:text-3xl">
+                Oi, você está bem?
+              </p>
 
               <h1 className="font-editorial mt-2 text-center text-[1.45rem] font-medium leading-[1.16] tracking-tight text-[#1C1917] text-balance sm:mt-4 sm:text-left sm:text-[clamp(2rem,3.9vw,3.5rem)] sm:leading-[1.08]">
                 Um lugar seguro para esvaziar a dor, acalmar a mente e reencontrar motivos para viver.
