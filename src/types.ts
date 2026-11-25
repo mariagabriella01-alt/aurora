@@ -59,3 +59,37 @@ export interface PrivateJournalEntry {
   note: string;
   createdAt: string;
 }
+
+export interface RelapseRecord {
+  id: string;
+  startedAt: string;
+  endedAt: string;
+  daysAchieved: number;
+  hoursAchieved: number;
+  note?: string;
+}
+
+export interface RecoveryGoal {
+  id: string;
+  habitName: string;
+  motivation?: string;
+  createdAt: string;
+  currentStartedAt: string;
+  bestStreakMs: number;
+  history: RelapseRecord[];
+  lastRelapseMessageAt?: string;
+}
+
+export interface SophiaPromptRequest {
+  prompt: string;
+  recoveryContext?: {
+    habitName: string;
+    daysClean: number;
+    hoursClean: number;
+    bestDays: number;
+    relapseCount: number;
+    intent: 'motivation' | 'milestone' | 'craving' | 'relapse';
+  };
+  trigger: number;
+}
+

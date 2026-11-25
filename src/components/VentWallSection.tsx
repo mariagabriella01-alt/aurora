@@ -221,39 +221,39 @@ export function VentWallSection({
     filter === 'Todos' ? vents : vents.filter((v) => v.category === filter);
 
   return (
-    <section id="desabafar" className="border-b border-[#EADCA6] bg-[#FEF9E6] py-8 sm:py-16 lg:py-20">
-      <div className="mx-auto max-w-6xl px-3.5 sm:px-6">
-        <div className="max-w-2xl">
-          <p className="text-[11px] font-medium tracking-widest uppercase text-[#57534E] sm:text-xs">
+    <section id="desabafar" className="border-b border-[#EADCA6] bg-[#FEF9E6] py-6 sm:py-16 lg:py-20">
+      <div className="mx-auto max-w-6xl px-3 sm:px-6">
+        <div className="mx-auto max-w-2xl text-center sm:mx-0 sm:text-left">
+          <p className="text-[10.5px] font-medium tracking-widest uppercase text-[#57534E] sm:text-xs">
             01 · Escuta e acolhimento humano
           </p>
-          <h2 className="font-editorial mt-1.5 text-2xl font-medium text-[#1C1917] sm:mt-2 sm:text-4xl text-balance">
+          <h2 className="font-editorial mt-1 text-[1.35rem] font-medium leading-[1.2] text-[#1C1917] sm:mt-2 sm:text-4xl text-balance">
             Coloque para fora o que está doendo — e ajude quem precisa ser ouvido
           </h2>
-          <p className="mt-2.5 text-[14.5px] leading-relaxed text-[#57534E] sm:mt-3 sm:text-base">
+          <p className="mt-2 text-[13.5px] leading-[1.55] text-[#57534E] sm:mt-3 sm:text-base sm:leading-relaxed">
             Às vezes o vazio diminui quando ganha palavras. Escreva para a comunidade receber apoio
             ou guarde apenas para você em uma carta privada.
           </p>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-5 sm:mt-10 sm:gap-8 lg:grid-cols-12 lg:gap-10">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-10 sm:gap-8 lg:grid-cols-12 lg:gap-10">
           {/* Composer */}
           <div className="lg:col-span-5">
             <form
               onSubmit={handleSubmitVent}
-              className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-6"
+              className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:p-6"
             >
-              <div className="flex items-center justify-between gap-3 border-b border-[#EADCA6] pb-3 sm:gap-4 sm:pb-4">
-                <h3 className="font-editorial text-xl font-medium text-[#1C1917] sm:text-2xl">
+              <div className="flex items-center justify-between gap-2.5 border-b border-[#EADCA6] pb-2.5 sm:gap-4 sm:pb-4">
+                <h3 className="font-editorial text-lg font-medium text-[#1C1917] sm:text-2xl">
                   Escrever desabafo
                 </h3>
               </div>
 
-              <div className="mt-3 flex rounded-lg bg-[#FAF0CA] p-1 sm:mt-4">
+              <div className="mt-2.5 flex flex-wrap gap-1 rounded-lg bg-[#FAF0CA] p-1 sm:mt-4 sm:flex-nowrap sm:gap-0">
                 <button
                   type="button"
                   onClick={() => setMode('community')}
-                  className={`min-h-[38px] flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[40px] sm:px-3 sm:py-2 sm:text-xs ${
+                  className={`min-h-[36px] flex-1 rounded-md px-2 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[40px] sm:px-3 sm:py-2 sm:text-xs ${
                     mode === 'community'
                       ? 'bg-white text-[#1C1917] shadow-xs'
                       : 'text-[#57534E] hover:text-[#1C1917]'
@@ -264,22 +264,22 @@ export function VentWallSection({
                 <button
                   type="button"
                   onClick={() => setMode('private')}
-                  className={`inline-flex min-h-[38px] flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[40px] sm:px-3 sm:py-2 sm:text-xs ${
+                  className={`inline-flex min-h-[36px] flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[40px] sm:px-3 sm:py-2 sm:text-xs ${
                     mode === 'private'
                       ? 'bg-white text-[#1C1917] shadow-xs'
                       : 'text-[#57534E] hover:text-[#1C1917]'
                   }`}
                 >
-                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                  <Lock className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
                   <span>Só para mim</span>
                 </button>
               </div>
 
-              <div className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
+              <div className="mt-3 space-y-2.5 sm:mt-5 sm:space-y-4">
                 <div>
                   <label
                     htmlFor="vent-category"
-                    className="block text-xs font-semibold text-[#44403C]"
+                    className="block text-[11.5px] font-semibold text-[#44403C] sm:text-xs"
                   >
                     O que mais descreve esse momento?
                   </label>
@@ -287,7 +287,7 @@ export function VentWallSection({
                     id="vent-category"
                     value={category}
                     onChange={(e) => setCategory(e.target.value as VentCategory)}
-                    className="mt-1 min-h-[40px] w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
+                    className="mt-1 min-h-[38px] w-full rounded-lg border border-[#DFCE91] bg-white px-2.5 py-1.5 text-base text-[#1C1917] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
                   >
                     {CATEGORIES.map((cat) => (
                       <option key={cat} value={cat}>
@@ -301,7 +301,7 @@ export function VentWallSection({
                   <div>
                     <label
                       htmlFor="vent-author"
-                      className="block text-xs font-semibold text-[#44403C]"
+                      className="block text-[11.5px] font-semibold text-[#44403C] sm:text-xs"
                     >
                       Como prefere ser chamado(a)? (opcional)
                     </label>
@@ -312,7 +312,7 @@ export function VentWallSection({
                       value={author}
                       onChange={(e) => setAuthor(e.target.value)}
                       placeholder="Ex.: Anônimo, Maria, Um coração cansado"
-                      className="mt-1 min-h-[40px] w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
+                      className="mt-1 min-h-[38px] w-full rounded-lg border border-[#DFCE91] bg-white px-2.5 py-1.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
                     />
                   </div>
                 )}
@@ -321,7 +321,7 @@ export function VentWallSection({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <label
                       htmlFor="vent-textarea"
-                      className="block text-xs font-semibold text-[#44403C]"
+                      className="block text-[11.5px] font-semibold text-[#44403C] sm:text-xs"
                     >
                       Seu desabafo
                     </label>
@@ -334,14 +334,14 @@ export function VentWallSection({
                   </div>
                   <textarea
                     id="vent-textarea"
-                    rows={4}
+                    rows={3}
                     maxLength={1200}
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="Escreva ou toque em Falar desabafo para contar o que está sentindo..."
-                    className="mt-1.5 w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2.5 text-base leading-relaxed text-[#1C1917] placeholder:text-[#A8A29E] sm:px-3.5 sm:py-3 sm:text-sm"
+                    className="mt-1.5 w-full rounded-lg border border-[#DFCE91] bg-white px-2.5 py-2 text-base leading-relaxed text-[#1C1917] placeholder:text-[#A8A29E] sm:min-h-[108px] sm:px-3.5 sm:py-3 sm:text-sm"
                   />
-                  <p className="mt-1 text-right text-xs text-[#78716C] tabular-nums">
+                  <p className="mt-0.5 text-right text-[11px] text-[#78716C] tabular-nums sm:mt-1 sm:text-xs">
                     {content.length}/1200
                   </p>
                 </div>
@@ -349,7 +349,7 @@ export function VentWallSection({
                 {feedback && (
                   <p
                     role="status"
-                    className={`rounded-lg border px-3.5 py-2.5 text-xs leading-relaxed ${
+                    className={`rounded-lg border px-3 py-2 text-[11.5px] leading-relaxed sm:px-3.5 sm:py-2.5 sm:text-xs ${
                       feedback.type === 'success'
                         ? 'border-[#13382C]/25 bg-[#13382C]/5 text-[#13382C]'
                         : 'border-red-300 bg-red-50 text-red-800'
@@ -362,7 +362,7 @@ export function VentWallSection({
                 {showCrisisCare && (
                   <div
                     role="note"
-                    className="rounded-lg border border-[#8A5A10]/35 bg-[#FDF3CF] p-4 text-xs leading-relaxed text-[#44403C]"
+                    className="rounded-lg border border-[#8A5A10]/35 bg-[#FDF3CF] p-3 text-[11.5px] leading-relaxed text-[#44403C] sm:p-4 sm:text-xs"
                   >
                     <p className="font-semibold text-[#1C1917]">
                       Se a dor estiver pesada demais agora, você não precisa passar por isso só.
@@ -371,17 +371,17 @@ export function VentWallSection({
                       O CVV atende gratuitamente 24 horas por dia em todo o Brasil, com sigilo total
                       por telefone ou chat.
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-2.5 flex flex-wrap gap-2 sm:mt-3">
                       <a
                         href="tel:188"
-                        className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-[#5C3A21] px-3.5 py-2 font-semibold text-[#FEF9E6] hover:bg-[#462A16]"
+                        className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg bg-[#5C3A21] px-3 py-1.5 font-semibold text-[#FEF9E6] hover:bg-[#462A16] sm:min-h-[40px] sm:px-3.5 sm:py-2"
                       >
                         <PhoneCall className="h-3.5 w-3.5" aria-hidden="true" />
                         <span>Ligar 188 (CVV)</span>
                       </a>
                       <a
                         href="#ajuda"
-                        className="inline-flex min-h-[40px] items-center rounded-lg border border-[#DFCE91] bg-white px-3.5 py-2 font-semibold text-[#1C1917] hover:bg-[#FAF0CA]"
+                        className="inline-flex min-h-[36px] items-center rounded-lg border border-[#DFCE91] bg-white px-3 py-1.5 font-semibold text-[#1C1917] hover:bg-[#FAF0CA] sm:min-h-[40px] sm:px-3.5 sm:py-2"
                       >
                         Ver canais de apoio
                       </a>
@@ -392,7 +392,7 @@ export function VentWallSection({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-lg bg-[#13382C] px-4 py-2.5 text-[13px] font-semibold text-[#FEF9E6] transition-all duration-150 hover:bg-[#0D281F] active:scale-[0.98] disabled:opacity-60 cursor-pointer sm:min-h-[46px] sm:px-5 sm:py-3 sm:text-sm"
+                  className="inline-flex min-h-[40px] w-full items-center justify-center gap-2 rounded-lg bg-[#13382C] px-4 py-2 text-[12.5px] font-semibold text-[#FEF9E6] transition-all duration-150 hover:bg-[#0D281F] active:scale-[0.98] disabled:opacity-60 cursor-pointer sm:min-h-[46px] sm:px-5 sm:py-3 sm:text-sm"
                 >
                   <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                   <span>
@@ -407,25 +407,25 @@ export function VentWallSection({
             </form>
 
             {privateVents.length > 0 && (
-              <div className="mt-5 rounded-xl border border-[#EADCA6] bg-[#FAF0CA] p-4 sm:mt-6 sm:p-5">
+              <div className="mt-4 rounded-xl border border-[#EADCA6] bg-[#FAF0CA] p-3.5 sm:mt-6 sm:p-5">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-editorial text-xl font-medium text-[#1C1917]">
+                  <h4 className="font-editorial text-lg font-medium text-[#1C1917] sm:text-xl">
                     Seus desabafos privados
                   </h4>
-                  <span className="text-xs text-[#57534E] tabular-nums">
+                  <span className="text-[11px] text-[#57534E] tabular-nums sm:text-xs">
                     {privateVents.length} {privateVents.length === 1 ? 'registro' : 'registros'}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-[#57534E]">
+                <p className="mt-1 text-[11.5px] text-[#57534E] sm:text-xs">
                   Visíveis apenas neste dispositivo. Quando quiser soltar o peso, você pode apagá-los.
                 </p>
-                <div className="mt-4 space-y-3">
+                <div className="mt-3 space-y-2.5 sm:mt-4 sm:space-y-3">
                   {privateVents.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-lg border border-[#EADCA6] bg-[#FFFDF4] p-4"
+                      className="rounded-lg border border-[#EADCA6] bg-[#FFFDF4] p-3 sm:p-4"
                     >
-                      <div className="flex items-center justify-between gap-2 text-xs text-[#57534E]">
+                      <div className="flex items-center justify-between gap-2 text-[11px] text-[#57534E] sm:text-xs">
                         <span>
                           {item.category} · {formatRelativeTimePt(item.createdAt)}
                         </span>
@@ -435,13 +435,13 @@ export function VentWallSection({
                             savePrivateVents(privateVents.filter((p) => p.id !== item.id))
                           }
                           aria-label="Soltar e remover desabafo privado"
-                          className="inline-flex min-h-[36px] items-center gap-1 text-xs font-medium text-[#57534E] hover:text-red-700 cursor-pointer"
+                          className="inline-flex min-h-[34px] items-center gap-1 text-[11px] font-medium text-[#57534E] hover:text-red-700 cursor-pointer sm:min-h-[36px] sm:text-xs"
                         >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
                           <span>Soltar</span>
                         </button>
                       </div>
-                      <p className="mt-2 text-sm leading-relaxed text-[#292524]">{item.content}</p>
+                      <p className="mt-1.5 text-[13px] leading-relaxed text-[#292524] sm:mt-2 sm:text-sm">{item.content}</p>
                     </div>
                   ))}
                 </div>
@@ -451,13 +451,13 @@ export function VentWallSection({
 
           {/* Community Feed */}
           <div className="lg:col-span-7">
-            <div className="flex flex-wrap items-center gap-1 rounded-lg bg-[#FAF0CA] p-1 sm:gap-1.5 sm:p-1.5">
+            <div className="flex flex-wrap items-center justify-center gap-1 rounded-lg bg-[#FAF0CA] p-1 sm:justify-start sm:gap-1.5 sm:p-1.5">
               {(['Todos', ...CATEGORIES] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => setFilter(tab)}
-                  className={`min-h-[34px] rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-1.5 sm:text-xs ${
+                  className={`min-h-[32px] rounded-md px-2 py-1 text-[11px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-1.5 sm:text-xs ${
                     filter === tab
                       ? 'bg-white text-[#1C1917] shadow-xs'
                       : 'text-[#57534E] hover:text-[#1C1917]'
@@ -468,20 +468,20 @@ export function VentWallSection({
               ))}
             </div>
 
-            <div className="mt-4 space-y-4 sm:mt-6 sm:space-y-5">
+            <div className="mt-3.5 space-y-3 sm:mt-6 sm:space-y-5">
               {loading ? (
-                <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-6 text-center text-sm text-[#57534E] sm:p-8">
+                <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 text-center text-[13px] text-[#57534E] sm:p-8 sm:text-sm">
                   Carregando desabafos da comunidade...
                 </div>
               ) : filteredVents.length === 0 ? (
-                <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-6 text-center text-sm text-[#57534E] sm:p-8">
+                <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 text-center text-[13px] text-[#57534E] sm:p-8 sm:text-sm">
                   Ainda não há desabafos nessa categoria. Se quiser, você pode ser a primeira pessoa a escrever.
                 </div>
               ) : (
                 filteredVents.map((vent) => (
                   <article
                     key={vent.id}
-                    className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-6"
+                    className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:p-6"
                   >
                     <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[#57534E] sm:gap-2 sm:text-xs">
                       <span className="font-semibold text-[#13382C]">{vent.author}</span>
@@ -491,22 +491,22 @@ export function VentWallSection({
                       <span>{formatRelativeTimePt(vent.createdAt)}</span>
                     </div>
 
-                    <p className="mt-2.5 text-[14px] leading-[1.6] text-[#1C1917] sm:mt-3 sm:text-[15px] sm:leading-[1.7]">
+                    <p className="mt-2 text-[13.5px] leading-[1.55] text-[#1C1917] sm:mt-3 sm:text-[15px] sm:leading-[1.7]">
                       {vent.content}
                     </p>
 
-                    <div className="mt-3.5 flex flex-wrap items-center gap-3 border-t border-[#F4E9BF] pt-3 sm:mt-5 sm:gap-5 sm:pt-4">
+                    <div className="mt-3 flex flex-wrap items-center gap-2.5 border-t border-[#F4E9BF] pt-2.5 sm:mt-5 sm:gap-5 sm:pt-4">
                       <button
                         type="button"
                         onClick={() => handleEmbrace(vent.id)}
-                        className={`inline-flex min-h-[38px] items-center gap-2 text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer ${
+                        className={`inline-flex min-h-[34px] items-center gap-1.5 text-[11.5px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[38px] sm:gap-2 sm:text-xs ${
                           embracedIds[vent.id]
                             ? 'text-[#13382C]'
                             : 'text-[#57534E] hover:text-[#13382C]'
                         }`}
                       >
                         <Heart
-                          className={`h-4 w-4 ${embracedIds[vent.id] ? 'fill-[#13382C]' : ''}`}
+                          className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${embracedIds[vent.id] ? 'fill-[#13382C]' : ''}`}
                           aria-hidden="true"
                         />
                         <span className="tabular-nums">
@@ -519,9 +519,9 @@ export function VentWallSection({
                         onClick={() =>
                           setOpenReplyId((prev) => (prev === vent.id ? null : vent.id))
                         }
-                        className="inline-flex min-h-[38px] items-center gap-2 text-xs font-semibold text-[#57534E] transition-colors hover:text-[#1C1917] whitespace-nowrap cursor-pointer"
+                        className="inline-flex min-h-[34px] items-center gap-1.5 text-[11.5px] font-semibold text-[#57534E] transition-colors hover:text-[#1C1917] whitespace-nowrap cursor-pointer sm:min-h-[38px] sm:gap-2 sm:text-xs"
                       >
-                        <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                        <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                         <span className="tabular-nums">
                           Apoiar com palavras ({vent.replies.length})
                         </span>
@@ -535,15 +535,15 @@ export function VentWallSection({
                     </div>
 
                     {vent.replies.length > 0 && (
-                      <div className="mt-4 space-y-3 border-t border-[#F4E9BF] pt-4">
+                      <div className="mt-3 space-y-2 border-t border-[#F4E9BF] pt-3 sm:mt-4 sm:space-y-3 sm:pt-4">
                         {vent.replies.map((reply) => (
-                          <div key={reply.id} className="rounded-lg bg-[#FAF0CA] px-4 py-3">
-                            <div className="flex items-center gap-2 text-xs text-[#57534E]">
+                          <div key={reply.id} className="rounded-lg bg-[#FAF0CA] px-3 py-2 sm:px-4 sm:py-3">
+                            <div className="flex items-center gap-1.5 text-[11px] text-[#57534E] sm:gap-2 sm:text-xs">
                               <span className="font-semibold text-[#1C1917]">{reply.author}</span>
                               <span aria-hidden="true">·</span>
                               <span>{formatRelativeTimePt(reply.createdAt)}</span>
                             </div>
-                            <p className="mt-1.5 text-sm leading-relaxed text-[#292524]">
+                            <p className="mt-1 text-[13px] leading-relaxed text-[#292524] sm:mt-1.5 sm:text-sm">
                               {reply.content}
                             </p>
                           </div>
@@ -554,7 +554,7 @@ export function VentWallSection({
                     {openReplyId === vent.id && (
                       <form
                         onSubmit={(e) => handleReplySubmit(e, vent.id)}
-                        className="mt-4 space-y-3 border-t border-[#F4E9BF] pt-4"
+                        className="mt-3 space-y-2.5 border-t border-[#F4E9BF] pt-3 sm:mt-4 sm:space-y-3 sm:pt-4"
                       >
                         <input
                           type="text"
@@ -562,7 +562,7 @@ export function VentWallSection({
                           value={replyAuthor}
                           onChange={(e) => setReplyAuthor(e.target.value)}
                           placeholder="Seu nome ou apelido (opcional)"
-                          className="min-h-[42px] w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:text-xs"
+                          className="min-h-[38px] w-full rounded-lg border border-[#DFCE91] bg-white px-2.5 py-1.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:min-h-[42px] sm:px-3 sm:py-2 sm:text-xs"
                         />
                         <textarea
                           rows={2}
@@ -570,20 +570,20 @@ export function VentWallSection({
                           value={replyContent}
                           onChange={(e) => setReplyContent(e.target.value)}
                           placeholder="Escreva uma palavra gentil para ajudar essa pessoa hoje..."
-                          className="w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:text-sm"
+                          className="w-full rounded-lg border border-[#DFCE91] bg-white px-2.5 py-1.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:px-3 sm:py-2 sm:text-sm"
                         />
-                        <div className="flex items-center justify-end gap-3">
+                        <div className="flex items-center justify-end gap-2 sm:gap-3">
                           <button
                             type="button"
                             onClick={() => setOpenReplyId(null)}
-                            className="min-h-[40px] px-3 py-1.5 text-xs font-medium text-[#57534E] hover:text-[#1C1917] cursor-pointer"
+                            className="min-h-[36px] px-2.5 py-1 text-xs font-medium text-[#57534E] hover:text-[#1C1917] cursor-pointer sm:min-h-[40px] sm:px-3 sm:py-1.5"
                           >
                             Cancelar
                           </button>
                           <button
                             type="submit"
                             disabled={replySubmitting || replyContent.trim().length < 4}
-                            className="min-h-[40px] rounded-lg bg-[#13382C] px-4 py-2 text-xs font-semibold text-[#FEF9E6] hover:bg-[#0D281F] disabled:opacity-50 cursor-pointer"
+                            className="min-h-[36px] rounded-lg bg-[#13382C] px-3.5 py-1.5 text-xs font-semibold text-[#FEF9E6] hover:bg-[#0D281F] disabled:opacity-50 cursor-pointer sm:min-h-[40px] sm:px-4 sm:py-2"
                           >
                             {replySubmitting ? 'Enviando...' : 'Enviar apoio'}
                           </button>

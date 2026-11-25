@@ -1,44 +1,17 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import {
+  getMicrophoneErrorMessage,
+  getSpeechRecognitionConstructor,
+  isAnyVoiceInputSupported,
+  isLikelyIosDevice,
+  isMediaRecordingSupported,
+  pickSupportedAudioMimeType,
+  transcribeAudioBlob,
+  type SpeechRecognitionLike,
+} from '../utils/voiceCapture';
 
-interface SpeechRecognitionAlternativeLike {
-  transcript: string;
-}
-
-interface SpeechRecognitionResultLike {
-  0: SpeechRecognitionAlternativeLike;
-  isFinal: boolean;
-}
-
-interface SpeechRecognitionEventLike {
-  results: ArrayLike<SpeechRecognitionResultLike>;
-}
-
-interface SpeechRecognitionErrorEventLike {
-  error: string;
-}
-
-export interface SpeechRecognitionLike {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
-  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-}
-
-type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
-
-export function getSpeechRecognitionConstructor(): SpeechRecognitionConstructor | null {
-  if (typeof window === 'undefined') return null;
-  const w = window as unknown as {
-    SpeechRecognition?: SpeechRecognitionConstructor;
-    webkitSpeechRecognition?: SpeechRecognitionConstructor;
-  };
-  return w.SpeechRecognition || w.webkitSpeechRecognition || null;
-}
+export { getSpeechRecognitionConstructor, type SpeechRecognitionLike };
 
 interface AccessibilityContextValue {
   speechOutputSupported: boolean;
@@ -52,6 +25,7 @@ interface AccessibilityContextValue {
   listeningCommand: boolean;
   lastCommandHeard: string | null;
   commandFeedback: string | null;
+  prepareAudioForPlayback: () => void;
   speak: (text: string, id?: string) => void;
   stopSpeaking: () => void;
   startVoiceCommand: () => void;
@@ -71,7 +45,8 @@ const KNOWN_FEMALE_PT_KEYWORDS = [
   'leticia',
   'letícia',
   'isabela',
-  'clara',
+  'sophia',
+  'sofia',
   'joana',
   'catarina',
   'ines',
@@ -139,7 +114,13 @@ function selectFemalePortugueseVoice(voices: SpeechSynthesisVoice[]): {
     if (isFemale) score += 100;
     if (isMale) score -= 120;
 
-    if (name.includes('natural') || name.includes('neural') || name.includes('online') || name.includes('enhanced') || name.includes('premium')) {
+    if (
+      name.includes('natural') ||
+      name.includes('neural') ||
+      name.includes('online') ||
+      name.includes('enhanced') ||
+      name.includes('premium')
+    ) {
       score += 25;
     }
 
@@ -171,7 +152,7 @@ export function AccessibilityProvider({
   onComposeVent,
 }: AccessibilityProviderProps) {
   const speechOutputSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
-  const speechInputSupported = getSpeechRecognitionConstructor() !== null;
+  const speechInputSupported = isAnyVoiceInputSupported();
 
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [spokenCaption, setSpokenCaption] = useState<string | null>(null);
@@ -183,11 +164,34 @@ export function AccessibilityProvider({
   const [commandFeedback, setCommandFeedback] = useState<string | null>(null);
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const commandRecorderRef = useRef<MediaRecorder | null>(null);
+  const commandStreamRef = useRef<MediaStream | null>(null);
+  const commandChunksRef = useRef<Blob[]>([]);
+  const commandTimerRef = useRef<number | null>(null);
+  const commandCancelledRef = useRef(false);
+
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ttsAbortRef = useRef<AbortController | null>(null);
   const audioCacheRef = useRef<Map<string, string>>(new Map());
   const speechSeqRef = useRef(0);
+
+  const stopCommandStream = useCallback(() => {
+    if (commandTimerRef.current !== null) {
+      window.clearTimeout(commandTimerRef.current);
+      commandTimerRef.current = null;
+    }
+    if (commandStreamRef.current) {
+      for (const track of commandStreamRef.current.getTracks()) {
+        try {
+          track.stop();
+        } catch {
+          // Ignore track stop errors
+        }
+      }
+      commandStreamRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     if (!speechOutputSupported) return;
@@ -225,6 +229,9 @@ export function AccessibilityProvider({
   const unlockMobileAudio = useCallback(() => {
     try {
       const player = getOrCreatePlayer();
+      if (!player.paused && player.currentTime > 0 && player.src && !player.src.startsWith('data:audio/wav')) {
+        return;
+      }
       player.muted = true;
       player.src = SILENT_WAV_URI;
       const p = player.play();
@@ -242,6 +249,10 @@ export function AccessibilityProvider({
       // Ignore unlock issues
     }
   }, [getOrCreatePlayer]);
+
+  const prepareAudioForPlayback = useCallback(() => {
+    unlockMobileAudio();
+  }, [unlockMobileAudio]);
 
   const stopActiveAudio = useCallback(() => {
     speechSeqRef.current += 1;
@@ -286,7 +297,7 @@ export function AccessibilityProvider({
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'pt-BR';
-        utterance.rate = 0.94;
+        utterance.rate = 0.88;
 
         const liveVoices = window.speechSynthesis.getVoices();
         const availableVoices = liveVoices.length > 0 ? liveVoices : voicesRef.current;
@@ -296,7 +307,7 @@ export function AccessibilityProvider({
         if (femaleVoice) {
           utterance.voice = femaleVoice;
         }
-        utterance.pitch = isExplicitlyFemale ? 1.03 : 1.1;
+        utterance.pitch = isExplicitlyFemale ? 1.0 : 1.06;
 
         utterance.onstart = () => {
           if (seq !== speechSeqRef.current) return;
@@ -460,7 +471,7 @@ export function AccessibilityProvider({
         normalized.includes('falar tudo')
       ) {
         const welcome =
-          'Oi, você está bem? Você está na Aurora, um novo começo, uma nova esperança. Aqui você pode desabafar, conversar com a assistente Clara, respirar com calma, ter um momento com Deus e lembrar motivos para viver.';
+          'Oi, você está bem? Você está na Aurora, um novo começo, uma nova esperança. Aqui você pode desabafar, conversar com a assistente Sophia, acompanhar sua jornada em Minha Superação, respirar com calma, ter um momento com Deus e lembrar motivos para viver.';
         speak(welcome, 'welcome-summary');
         setCommandFeedback('Lendo boas-vindas em voz alta.');
         return;
@@ -475,12 +486,25 @@ export function AccessibilityProvider({
 
       if (
         normalized.includes('assistent') ||
-        normalized.includes('clara') ||
+        normalized.includes('sophia') ||
+        normalized.includes('sofia') ||
         normalized.includes('convers')
       ) {
         onNavigateSection('assistente');
-        speak('Abrindo a conversa com a assistente Clara.', 'nav-assistant');
-        setCommandFeedback('Indo para a Assistente.');
+        speak('Abrindo a conversa com a assistente Sophia.', 'nav-assistant');
+        setCommandFeedback('Indo para a Sophia.');
+        return;
+      }
+
+      if (
+        normalized.includes('supera') ||
+        normalized.includes('vicio') ||
+        normalized.includes('habito') ||
+        normalized.includes('recaida')
+      ) {
+        onNavigateSection('superacao');
+        speak('Abrindo o espaço Minha Superação para acompanhar seu progresso.', 'nav-recovery');
+        setCommandFeedback('Indo para Minha Superação.');
         return;
       }
 
@@ -535,7 +559,7 @@ export function AccessibilityProvider({
       }
 
       setCommandFeedback(
-        `Ouvi "${rawTranscript}". Diga: "desabafar", "assistente", "saúde mental", "Deus", "motivos" ou "ajuda".`,
+        `Ouvi "${rawTranscript}". Diga: "desabafar", "Sophia", "superação", "saúde mental", "Deus", "motivos" ou "ajuda".`,
       );
     },
     [onComposeVent, onNavigateSection, speak, stopSpeaking],
@@ -547,24 +571,125 @@ export function AccessibilityProvider({
     } catch {
       // Ignore stop errors
     }
+    try {
+      if (commandRecorderRef.current && commandRecorderRef.current.state === 'recording') {
+        commandRecorderRef.current.stop();
+        return;
+      }
+    } catch {
+      // Ignore recorder stop errors
+    }
+    stopCommandStream();
     setListeningCommand(false);
-  }, []);
+  }, [stopCommandStream]);
 
-  const startVoiceCommand = useCallback(() => {
-    const Recognition = getSpeechRecognitionConstructor();
-    if (!Recognition) {
+  const startCommandRecorderFallback = useCallback(async () => {
+    if (!isMediaRecordingSupported()) {
       setCommandFeedback(
-        'O reconhecimento de voz não está disponível neste navegador. Use os botões visuais grandes ou a leitura em voz alta.',
+        'O reconhecimento de voz não está disponível neste navegador. Use os botões visuais ou toque em Ouvir guia.',
       );
       return;
     }
 
+    commandCancelledRef.current = false;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      commandStreamRef.current = stream;
+
+      const mimeType = pickSupportedAudioMimeType();
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+
+      commandChunksRef.current = [];
+      commandRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (ev) => {
+        if (ev.data && ev.data.size > 0) {
+          commandChunksRef.current.push(ev.data);
+        }
+      };
+
+      recorder.onerror = () => {
+        stopCommandStream();
+        setListeningCommand(false);
+        setCommandFeedback('Não foi possível capturar o comando de voz agora.');
+      };
+
+      recorder.onstop = async () => {
+        stopCommandStream();
+        setListeningCommand(false);
+
+        if (commandCancelledRef.current) {
+          commandChunksRef.current = [];
+          return;
+        }
+
+        const effectiveMime = recorder.mimeType || mimeType || 'audio/webm';
+        const blob = new Blob(commandChunksRef.current, { type: effectiveMime });
+        commandChunksRef.current = [];
+
+        if (blob.size < 400) {
+          setCommandFeedback('Não ouvi nenhum comando. Toque no microfone e fale próximo ao aparelho.');
+          return;
+        }
+
+        setCommandFeedback('Entendendo seu comando de voz...');
+        try {
+          const transcript = await transcribeAudioBlob(blob, effectiveMime);
+          if (transcript) {
+            executeVoiceCommand(transcript);
+          } else {
+            setCommandFeedback('Não ouvi nenhuma fala clara. Tente falar um pouco mais perto.');
+          }
+        } catch (err) {
+          setCommandFeedback(
+            err instanceof Error
+              ? err.message
+              : 'Não foi possível transcrever o comando de voz agora.',
+          );
+        }
+      };
+
+      recorder.start();
+      setCommandFeedback(
+        'Ouvindo... diga "Sophia", "desabafar", "superação", "Deus", "motivos" ou "ajuda" e toque em Parar.',
+      );
+      setListeningCommand(true);
+
+      commandTimerRef.current = window.setTimeout(() => {
+        if (commandRecorderRef.current && commandRecorderRef.current.state === 'recording') {
+          commandRecorderRef.current.stop();
+        }
+      }, 8_000);
+    } catch (err) {
+      stopCommandStream();
+      setListeningCommand(false);
+      setCommandFeedback(getMicrophoneErrorMessage(err));
+    }
+  }, [executeVoiceCommand, stopCommandStream]);
+
+  const startVoiceCommand = useCallback(() => {
+    prepareAudioForPlayback();
     stopSpeaking();
 
     try {
       recognitionRef.current?.stop();
     } catch {
       // Ignore
+    }
+
+    if (!isAnyVoiceInputSupported()) {
+      setCommandFeedback(
+        'O reconhecimento de voz não está disponível neste navegador. Use os botões visuais grandes ou a leitura em voz alta.',
+      );
+      return;
+    }
+
+    const Recognition = getSpeechRecognitionConstructor();
+    if (isLikelyIosDevice() || !Recognition) {
+      void startCommandRecorderFallback();
+      return;
     }
 
     try {
@@ -582,7 +707,16 @@ export function AccessibilityProvider({
 
       rec.onerror = (event) => {
         setListeningCommand(false);
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        if (
+          (event.error === 'service-not-allowed' ||
+            event.error === 'audio-capture' ||
+            event.error === 'network') &&
+          isMediaRecordingSupported()
+        ) {
+          void startCommandRecorderFallback();
+          return;
+        }
+        if (event.error === 'not-allowed') {
           setCommandFeedback('Permita o uso do microfone no navegador para usar comandos de voz.');
         } else if (event.error === 'no-speech') {
           setCommandFeedback('Não ouvi nenhuma fala. Toque no microfone e fale próximo ao aparelho.');
@@ -596,20 +730,31 @@ export function AccessibilityProvider({
       };
 
       recognitionRef.current = rec;
-      setCommandFeedback('Pode falar o comando agora: "desabafar", "assistente", "Deus", "motivos" ou "ajuda".');
+      setCommandFeedback(
+        'Pode falar o comando agora: "Sophia", "desabafar", "superação", "Deus", "motivos" ou "ajuda".',
+      );
       setListeningCommand(true);
       rec.start();
     } catch {
       setListeningCommand(false);
-      setCommandFeedback('Não foi possível iniciar o microfone neste navegador.');
+      if (isMediaRecordingSupported()) {
+        void startCommandRecorderFallback();
+      } else {
+        setCommandFeedback('Não foi possível iniciar o microfone neste navegador.');
+      }
     }
-  }, [executeVoiceCommand, stopSpeaking]);
+  }, [executeVoiceCommand, prepareAudioForPlayback, startCommandRecorderFallback, stopSpeaking]);
 
   useEffect(() => {
     const cache = audioCacheRef.current;
     return () => {
+      commandCancelledRef.current = true;
       try {
         recognitionRef.current?.stop();
+        if (commandRecorderRef.current && commandRecorderRef.current.state !== 'inactive') {
+          commandRecorderRef.current.stop();
+        }
+        stopCommandStream();
         stopActiveAudio();
         for (const url of cache.values()) {
           URL.revokeObjectURL(url);
@@ -619,7 +764,7 @@ export function AccessibilityProvider({
         // Ignore cleanup errors
       }
     };
-  }, [stopActiveAudio]);
+  }, [stopActiveAudio, stopCommandStream]);
 
   return (
     <AccessibilityContext.Provider
@@ -635,6 +780,7 @@ export function AccessibilityProvider({
         listeningCommand,
         lastCommandHeard,
         commandFeedback,
+        prepareAudioForPlayback,
         speak,
         stopSpeaking,
         startVoiceCommand,

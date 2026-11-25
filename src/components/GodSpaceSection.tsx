@@ -427,11 +427,11 @@ export function GodSpaceSection({
   };
 
   return (
-    <section id="espaco-de-deus" className="border-b border-[#EADCA6] bg-[#FEF9E6] py-8 sm:py-16 lg:py-20">
-      <div className="mx-auto max-w-6xl px-3.5 sm:px-6">
-        <div className="grid grid-cols-1 gap-5 sm:gap-8 lg:grid-cols-12 lg:items-stretch lg:gap-10">
+    <section id="espaco-de-deus" className="border-b border-[#EADCA6] bg-[#FEF9E6] py-6 sm:py-16 lg:py-20">
+      <div className="mx-auto max-w-6xl px-3 sm:px-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-8 lg:grid-cols-12 lg:items-stretch lg:gap-10">
           <div className="lg:col-span-5">
-            <div className="h-48 min-h-[192px] overflow-hidden rounded-xl border border-[#EADCA6] bg-[#FAF0CA] sm:h-88 sm:min-h-[260px] lg:h-full">
+            <div className="h-40 min-h-[160px] overflow-hidden rounded-xl border border-[#EADCA6] bg-[#FAF0CA] sm:h-88 sm:min-h-[260px] lg:h-full">
               <ResilientImage
                 src="/src/assets/images/god_space_light_1795530096820.jpg"
                 alt="Escrituras abertas sobre mesa de madeira sob luz dourada suave da manhã ao lado de flores de camomila"
@@ -442,25 +442,25 @@ export function GodSpaceSection({
           </div>
 
           <div className="flex flex-col justify-between lg:col-span-7">
-            <div>
-              <p className="text-[11px] font-medium tracking-widest uppercase text-[#8A5A10] sm:text-xs">
+            <div className="text-center sm:text-left">
+              <p className="text-[10.5px] font-medium tracking-widest uppercase text-[#8A5A10] sm:text-xs">
                 03 · Espaço de Deus
               </p>
-              <h2 className="font-editorial mt-1.5 text-2xl font-medium text-[#1C1917] sm:mt-2 sm:text-4xl text-balance">
+              <h2 className="font-editorial mt-1 text-[1.35rem] font-medium leading-[1.2] text-[#1C1917] sm:mt-2 sm:text-4xl text-balance">
                 Descanso espiritual, palavra viva e oração para quem busca paz
               </h2>
-              <p className="mt-2.5 text-[14.5px] leading-relaxed text-[#57534E] sm:mt-3 sm:text-base">
+              <p className="mt-2 text-[13.5px] leading-[1.55] text-[#57534E] sm:mt-3 sm:text-base sm:leading-relaxed">
                 Um refúgio sereno para lembrar que você é amado(a) por Deus mesmo nos dias em que
                 não consegue explicar sua própria dor.
               </p>
 
-              <div className="mt-4 flex flex-wrap gap-1 rounded-lg bg-[#FAF0CA] p-1 sm:mt-6 sm:gap-1.5 sm:p-1.5">
+              <div className="mt-3 flex flex-wrap justify-center gap-1 rounded-lg bg-[#FAF0CA] p-1 sm:mt-6 sm:justify-start sm:gap-1.5 sm:p-1.5">
                 {SPIRITUAL_STATES.map((state) => (
                   <button
                     key={state.id}
                     type="button"
                     onClick={() => setActiveStateId(state.id)}
-                    className={`min-h-[34px] rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-1.5 sm:text-xs ${
+                    className={`min-h-[32px] rounded-md px-2 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-1.5 sm:text-xs ${
                       activeStateId === state.id
                         ? 'bg-white text-[#1C1917] shadow-xs'
                         : 'text-[#57534E] hover:text-[#1C1917]'
@@ -472,9 +472,9 @@ export function GodSpaceSection({
               </div>
             </div>
 
-            <div className="mt-4 rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:mt-6 sm:p-8">
+            <div className="mt-3.5 rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:mt-6 sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[11px] font-semibold tracking-wider uppercase text-[#8A5A10] sm:text-xs">
+                <p className="text-[10.5px] font-semibold tracking-wider uppercase text-[#8A5A10] sm:text-xs">
                   {activeWord.reference}
                 </p>
                 <SpeakButton
@@ -483,15 +483,15 @@ export function GodSpaceSection({
                   text={`${activeWord.reference}. ${activeWord.verse}. ${activeWord.reflection}. Oração: ${activeWord.prayer}`}
                 />
               </div>
-              <blockquote className="font-editorial mt-2.5 text-xl italic leading-snug text-[#1C1917] sm:mt-3 sm:text-[26px]">
+              <blockquote className="font-editorial mt-2 text-lg italic leading-snug text-[#1C1917] sm:mt-3 sm:text-[26px]">
                 {activeWord.verse}
               </blockquote>
-              <p className="mt-3 text-[13.5px] leading-relaxed text-[#44403C] sm:mt-4 sm:text-sm">
+              <p className="mt-2.5 text-[13px] leading-relaxed text-[#44403C] sm:mt-4 sm:text-sm">
                 {activeWord.reflection}
               </p>
-              <div className="mt-4 border-t border-[#F4E9BF] pt-3 sm:mt-5 sm:pt-4">
-                <p className="text-xs font-semibold text-[#13382C]">Oração breve para este momento</p>
-                <p className="mt-1 text-[13.5px] italic leading-relaxed text-[#292524] sm:text-sm">
+              <div className="mt-3 border-t border-[#F4E9BF] pt-2.5 sm:mt-5 sm:pt-4">
+                <p className="text-[11.5px] font-semibold text-[#13382C] sm:text-xs">Oração breve para este momento</p>
+                <p className="mt-1 text-[13px] italic leading-relaxed text-[#292524] sm:text-sm">
                   {activeWord.prayer}
                 </p>
               </div>
@@ -500,16 +500,16 @@ export function GodSpaceSection({
         </div>
 
         {/* Momento a Sós com Deus */}
-        <div className="mt-6 rounded-2xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:mt-12 sm:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#EADCA6] pb-4 sm:gap-4 sm:pb-5">
+        <div className="mt-5 rounded-2xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:mt-12 sm:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-2.5 border-b border-[#EADCA6] pb-3 sm:gap-4 sm:pb-5">
             <div className="max-w-2xl">
-              <p className="text-[11px] font-medium tracking-widest uppercase text-[#8A5A10] sm:text-xs">
+              <p className="text-[10.5px] font-medium tracking-widest uppercase text-[#8A5A10] sm:text-xs">
                 Momento com Deus
               </p>
-              <h3 className="font-editorial mt-1 text-xl font-medium text-[#1C1917] sm:mt-1.5 sm:text-3xl text-balance">
+              <h3 className="font-editorial mt-1 text-lg font-medium text-[#1C1917] sm:mt-1.5 sm:text-3xl text-balance">
                 Reserve alguns minutos em silêncio e conversa sincera com Deus
               </h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-[#57534E] sm:mt-1.5 sm:text-sm">
+              <p className="mt-1 text-[12.5px] leading-relaxed text-[#57534E] sm:mt-1.5 sm:text-sm">
                 Um tempo guiado para desligar o barulho lá fora, entregar o que pesa no coração e
                 ouvir paz por dentro.
               </p>
@@ -520,7 +520,7 @@ export function GodSpaceSection({
                 type="button"
                 onClick={toggleAmbientSound}
                 aria-pressed={ambientPlaying}
-                className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[42px] sm:gap-2 sm:px-3.5 sm:py-2 sm:text-xs ${
+                className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[42px] sm:gap-2 sm:px-3.5 sm:py-2 sm:text-xs ${
                   ambientPlaying
                     ? 'border-[#8A5A10] bg-[#8A5A10]/10 text-[#8A5A10]'
                     : 'border-[#DFCE91] bg-white text-[#44403C] hover:bg-[#FAF0CA]'
@@ -528,36 +528,36 @@ export function GodSpaceSection({
               >
                 {ambientPlaying ? (
                   <>
-                    <Volume2 className="h-4 w-4" aria-hidden="true" />
+                    <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                     <span>Som de paz ligado</span>
                   </>
                 ) : (
                   <>
-                    <VolumeX className="h-4 w-4" aria-hidden="true" />
+                    <VolumeX className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                     <span>Ouvir som suave de paz</span>
                   </>
                 )}
               </button>
               {ambientPlaying && (
-                <p className="text-[11px] font-medium text-[#8A5A10]" aria-live="polite">
+                <p className="text-[10.5px] font-medium text-[#8A5A10] sm:text-[11px]" aria-live="polite">
                   Legenda visual: melodia suave de paz tocando continuamente.
                 </p>
               )}
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-1 gap-5 sm:mt-6 sm:gap-8 lg:grid-cols-12">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-6 sm:gap-8 lg:grid-cols-12">
             {/* Guided Devotional Steps & Quiet Timer */}
             <div className="flex flex-col justify-between lg:col-span-7">
               <div>
-                <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
                   <div className="flex items-center gap-1 rounded-lg bg-[#FAF0CA] p-1 sm:gap-1.5">
                     {MOMENT_DURATIONS.map((item) => (
                       <button
                         key={item.seconds}
                         type="button"
                         onClick={() => handleSelectDuration(item.seconds)}
-                        className={`min-h-[34px] rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-1.5 sm:text-xs ${
+                        className={`min-h-[32px] rounded-md px-2 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-1.5 sm:text-xs ${
                           selectedDuration === item.seconds
                             ? 'bg-white text-[#1C1917] shadow-xs'
                             : 'text-[#57534E] hover:text-[#1C1917]'
@@ -569,7 +569,7 @@ export function GodSpaceSection({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <span className="font-editorial text-2xl font-semibold text-[#1C1917] tabular-nums sm:text-3xl">
+                    <span className="font-editorial text-xl font-semibold text-[#1C1917] tabular-nums sm:text-3xl">
                       {formatClock(momentSecondsLeft)}
                     </span>
                     <button
@@ -580,7 +580,7 @@ export function GodSpaceSection({
                         }
                         setMomentRunning((prev) => !prev);
                       }}
-                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg bg-[#8A5A10] px-3 py-1.5 text-[11px] font-semibold text-white transition-all duration-150 hover:bg-[#72490B] active:scale-[0.98] whitespace-nowrap cursor-pointer sm:min-h-[42px] sm:px-3.5 sm:py-2 sm:text-xs"
+                      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg bg-[#8A5A10] px-2.5 py-1 text-[11px] font-semibold text-white transition-all duration-150 hover:bg-[#72490B] active:scale-[0.98] whitespace-nowrap cursor-pointer sm:min-h-[42px] sm:px-3.5 sm:py-2 sm:text-xs"
                     >
                       {momentRunning ? (
                         <>
@@ -598,7 +598,7 @@ export function GodSpaceSection({
                       type="button"
                       onClick={() => handleSelectDuration(selectedDuration)}
                       aria-label="Reiniciar tempo de oração"
-                      className="inline-flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-[#DFCE91] bg-white text-[#44403C] hover:bg-[#FAF0CA] cursor-pointer sm:h-11 sm:w-11"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#DFCE91] bg-white text-[#44403C] hover:bg-[#FAF0CA] cursor-pointer sm:h-11 sm:w-11"
                     >
                       <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
@@ -606,52 +606,52 @@ export function GodSpaceSection({
                 </div>
 
                 {momentSecondsLeft === 0 && (
-                  <p className="mt-3 rounded-lg border border-[#8A5A10]/25 bg-[#8A5A10]/8 px-3.5 py-2 text-xs font-medium text-[#72490B] sm:mt-4 sm:px-4 sm:py-2.5">
+                  <p className="mt-2.5 rounded-lg border border-[#8A5A10]/25 bg-[#8A5A10]/8 px-3 py-2 text-[11.5px] font-medium text-[#72490B] sm:mt-4 sm:px-4 sm:py-2.5 sm:text-xs">
                     Tempo concluído. Leve essa paz com você para o restante do seu dia.
                   </p>
                 )}
 
-                <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-6 sm:grid-cols-4">
+                <div className="mt-3 grid grid-cols-2 gap-1.5 sm:mt-6 sm:grid-cols-4 sm:gap-2">
                   {DEVOTIONAL_STEPS.map((step, index) => (
                     <button
                       key={step.number}
                       type="button"
                       onClick={() => setActiveStepIndex(index)}
-                      className={`min-h-[52px] rounded-lg border px-2.5 py-2 text-left transition-colors cursor-pointer sm:min-h-[58px] sm:px-3 sm:py-2.5 ${
+                      className={`min-h-[46px] rounded-lg border px-2 py-1.5 text-left transition-colors cursor-pointer sm:min-h-[58px] sm:px-3 sm:py-2.5 ${
                         activeStepIndex === index
                           ? 'border-[#8A5A10] bg-[#FAF0CA] text-[#1C1917]'
                           : 'border-[#EADCA6] bg-[#FEF9E6] text-[#57534E] hover:text-[#1C1917]'
                       }`}
                     >
-                      <span className="font-editorial block text-sm font-semibold text-[#8A5A10] tabular-nums sm:text-base">
+                      <span className="font-editorial block text-xs font-semibold text-[#8A5A10] tabular-nums sm:text-base">
                         {step.number}
                       </span>
-                      <span className="mt-0.5 block truncate text-[11px] font-semibold">
+                      <span className="mt-0.5 block truncate text-[10.5px] font-semibold sm:text-[11px]">
                         {step.title}
                       </span>
                     </button>
                   ))}
                 </div>
 
-                <div className="mt-4 rounded-xl bg-[#FEF9E6] p-4 sm:mt-5 sm:p-6">
-                  <h4 className="font-editorial text-xl font-medium text-[#1C1917] sm:text-2xl">
+                <div className="mt-3 rounded-xl bg-[#FEF9E6] p-3.5 sm:mt-5 sm:p-6">
+                  <h4 className="font-editorial text-lg font-medium text-[#1C1917] sm:text-2xl">
                     {DEVOTIONAL_STEPS[activeStepIndex].number} {DEVOTIONAL_STEPS[activeStepIndex].title}
                   </h4>
-                  <p className="mt-2 text-[13.5px] leading-relaxed text-[#44403C] sm:mt-2.5 sm:text-sm">
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-[#44403C] sm:mt-2.5 sm:text-sm">
                     {DEVOTIONAL_STEPS[activeStepIndex].guidance}
                   </p>
-                  <p className="font-editorial mt-3 border-t border-[#EADCA6] pt-2.5 text-base italic text-[#8A5A10] sm:mt-4 sm:pt-3 sm:text-lg">
+                  <p className="font-editorial mt-2.5 border-t border-[#EADCA6] pt-2 text-[15px] italic text-[#8A5A10] sm:mt-4 sm:pt-3 sm:text-lg">
                     {DEVOTIONAL_STEPS[activeStepIndex].scripture}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-between text-xs">
+              <div className="mt-2.5 flex items-center justify-between text-xs sm:mt-4">
                 <button
                   type="button"
                   disabled={activeStepIndex === 0}
                   onClick={() => setActiveStepIndex((i) => Math.max(0, i - 1))}
-                  className="min-h-[40px] font-semibold text-[#57534E] hover:text-[#1C1917] disabled:opacity-40 cursor-pointer"
+                  className="min-h-[36px] font-semibold text-[#57534E] hover:text-[#1C1917] disabled:opacity-40 cursor-pointer sm:min-h-[40px]"
                 >
                   Passo anterior
                 </button>
@@ -661,7 +661,7 @@ export function GodSpaceSection({
                   onClick={() =>
                     setActiveStepIndex((i) => Math.min(DEVOTIONAL_STEPS.length - 1, i + 1))
                   }
-                  className="min-h-[40px] font-semibold text-[#8A5A10] hover:text-[#72490B] disabled:opacity-40 cursor-pointer"
+                  className="min-h-[36px] font-semibold text-[#8A5A10] hover:text-[#72490B] disabled:opacity-40 cursor-pointer sm:min-h-[40px]"
                 >
                   Próximo passo
                 </button>
@@ -669,25 +669,25 @@ export function GodSpaceSection({
             </div>
 
             {/* Private Letter to God */}
-            <div className="rounded-xl border border-[#EADCA6] bg-[#FEF9E6] p-4 sm:p-5 lg:col-span-5">
+            <div className="rounded-xl border border-[#EADCA6] bg-[#FEF9E6] p-3.5 sm:p-5 lg:col-span-5">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs font-semibold text-[#8A5A10]">
+                <div className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[#8A5A10] sm:gap-2 sm:text-xs">
                   <Feather className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                   <span>Conversa particular com Deus</span>
                 </div>
-                <span className="inline-flex items-center gap-1 text-[11px] text-[#57534E]">
+                <span className="inline-flex items-center gap-1 text-[10.5px] text-[#57534E] sm:text-[11px]">
                   <Lock className="h-3 w-3" aria-hidden="true" />
                   <span>Só você lê</span>
                 </span>
               </div>
 
-              <form onSubmit={handleSaveLetter} className="mt-3 space-y-2.5 sm:space-y-3">
+              <form onSubmit={handleSaveLetter} className="mt-2.5 space-y-2 sm:mt-3 sm:space-y-3">
                 <label htmlFor="letter-to-god" className="sr-only">
                   Escreva sua conversa particular com Deus
                 </label>
                 <textarea
                   id="letter-to-god"
-                  rows={4}
+                  rows={3}
                   maxLength={900}
                   value={letterText}
                   onChange={(e) => {
@@ -695,11 +695,11 @@ export function GodSpaceSection({
                     if (letterSavedMsg) setLetterSavedMsg(null);
                   }}
                   placeholder="Escreva como se estivesse conversando com Deus agora. Fale das suas dores, dúvidas, pedidos ou agradecimentos..."
-                  className="w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base leading-relaxed text-[#1C1917] placeholder:text-[#A8A29E] sm:px-3.5 sm:py-2.5 sm:text-sm"
+                  className="w-full rounded-lg border border-[#DFCE91] bg-white px-2.5 py-1.5 text-base leading-relaxed text-[#1C1917] placeholder:text-[#A8A29E] sm:min-h-[108px] sm:px-3.5 sm:py-2.5 sm:text-sm"
                 />
 
                 {letterSavedMsg && (
-                  <p role="status" className="text-xs font-medium text-[#13382C]">
+                  <p role="status" className="text-[11.5px] font-medium text-[#13382C] sm:text-xs">
                     {letterSavedMsg}
                   </p>
                 )}
@@ -707,21 +707,21 @@ export function GodSpaceSection({
                 <button
                   type="submit"
                   disabled={letterText.trim().length < 4}
-                  className="min-h-[40px] w-full rounded-lg border border-[#8A5A10] bg-white px-4 py-2 text-xs font-semibold text-[#8A5A10] transition-colors hover:bg-[#8A5A10] hover:text-white disabled:opacity-50 cursor-pointer sm:min-h-[44px]"
+                  className="min-h-[38px] w-full rounded-lg border border-[#8A5A10] bg-white px-4 py-1.5 text-xs font-semibold text-[#8A5A10] transition-colors hover:bg-[#8A5A10] hover:text-white disabled:opacity-50 cursor-pointer sm:min-h-[44px] sm:py-2"
                 >
                   Guardar minha conversa com Deus
                 </button>
               </form>
 
               {lettersToGod.length > 0 && (
-                <div className="mt-3.5 max-h-44 space-y-2 overflow-y-auto border-t border-[#EADCA6] pt-3 sm:mt-4">
+                <div className="mt-3 max-h-40 space-y-2 overflow-y-auto border-t border-[#EADCA6] pt-2.5 sm:mt-4 sm:max-h-44 sm:pt-3">
                   {lettersToGod.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-start justify-between gap-3 rounded-lg bg-white px-3 py-2 border border-[#EADCA6] sm:px-3.5 sm:py-2.5"
+                      className="flex items-start justify-between gap-2.5 rounded-lg bg-white px-3 py-2 border border-[#EADCA6] sm:gap-3 sm:px-3.5 sm:py-2.5"
                     >
                       <div>
-                        <p className="text-[11px] text-[#78716C]">
+                        <p className="text-[10.5px] text-[#78716C] sm:text-[11px]">
                           {formatRelativeTimePt(item.createdAt)}
                         </p>
                         <p className="mt-1 text-xs leading-relaxed text-[#292524]">
@@ -732,7 +732,7 @@ export function GodSpaceSection({
                         type="button"
                         onClick={() => handleDeleteLetter(item.id)}
                         aria-label="Apagar conversa com Deus"
-                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center text-[#78716C] hover:text-red-700 cursor-pointer"
+                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#78716C] hover:text-red-700 cursor-pointer sm:h-9 sm:w-9"
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
@@ -745,25 +745,25 @@ export function GodSpaceSection({
         </div>
 
         {/* Biblioteca de Versículos da Bíblia */}
-        <div className="mt-6 rounded-2xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:mt-12 sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EADCA6] pb-4 sm:gap-4 sm:pb-5">
+        <div className="mt-5 rounded-2xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:mt-12 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#EADCA6] pb-3 sm:gap-4 sm:pb-5">
             <div>
-              <div className="flex items-center gap-2 text-[11px] font-semibold text-[#8A5A10] sm:text-xs">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#8A5A10] sm:gap-2 sm:text-xs">
                 <BookText className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                 <span>Versículos da Bíblia</span>
               </div>
-              <h3 className="font-editorial mt-1 text-xl font-medium text-[#1C1917] sm:mt-1.5 sm:text-3xl">
+              <h3 className="font-editorial mt-1 text-lg font-medium text-[#1C1917] sm:mt-1.5 sm:text-3xl">
                 Palavras das Escrituras para ler, guardar e compartilhar
               </h3>
             </div>
 
-            <div className="flex flex-wrap gap-1 rounded-lg bg-[#FAF0CA] p-1 sm:gap-1.5">
+            <div className="flex flex-wrap justify-center gap-1 rounded-lg bg-[#FAF0CA] p-1 sm:justify-start sm:gap-1.5">
               {VERSE_TOPICS.map((topic) => (
                 <button
                   key={topic}
                   type="button"
                   onClick={() => setVerseFilter(topic)}
-                  className={`min-h-[34px] rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-1.5 sm:text-xs ${
+                  className={`min-h-[32px] rounded-md px-2 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-1.5 sm:text-xs ${
                     verseFilter === topic
                       ? 'bg-white text-[#1C1917] shadow-xs'
                       : 'text-[#57534E] hover:text-[#1C1917]'
@@ -775,29 +775,29 @@ export function GodSpaceSection({
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-3.5 sm:mt-6 sm:gap-4 md:grid-cols-2">
+          <div className="mt-3.5 grid grid-cols-1 gap-3 sm:mt-6 sm:gap-4 md:grid-cols-2">
             {filteredVerses.map((verse) => {
               const isCopied = copiedVerseId === verse.id;
               return (
                 <article
                   key={verse.id}
-                  className="flex flex-col justify-between rounded-xl border border-[#EADCA6] bg-[#FEF9E6] p-4 sm:p-5"
+                  className="flex flex-col justify-between rounded-xl border border-[#EADCA6] bg-[#FEF9E6] p-3.5 sm:p-5"
                 >
                   <div>
                     <p className="text-[11px] text-[#57534E] sm:text-xs">
                       <span className="font-semibold text-[#8A5A10]">{verse.reference}</span> ·{' '}
                       <span>{verse.topic}</span>
                     </p>
-                    <blockquote className="font-editorial mt-2 text-lg italic leading-snug text-[#1C1917] sm:mt-2.5 sm:text-xl">
+                    <blockquote className="font-editorial mt-1.5 text-base italic leading-snug text-[#1C1917] sm:mt-2.5 sm:text-xl">
                       “{verse.text}”
                     </blockquote>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#EADCA6] pt-2.5 sm:mt-4 sm:gap-4 sm:pt-3">
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2.5 border-t border-[#EADCA6] pt-2 sm:mt-4 sm:gap-4 sm:pt-3">
                     <button
                       type="button"
                       onClick={() => void handleCopyVerse(verse)}
-                      className="inline-flex min-h-[38px] items-center gap-1.5 text-xs font-semibold text-[#57534E] transition-colors hover:text-[#8A5A10] whitespace-nowrap cursor-pointer"
+                      className="inline-flex min-h-[34px] items-center gap-1.5 text-[11.5px] font-semibold text-[#57534E] transition-colors hover:text-[#8A5A10] whitespace-nowrap cursor-pointer sm:min-h-[38px] sm:text-xs"
                     >
                       {isCopied ? (
                         <>
@@ -825,28 +825,28 @@ export function GodSpaceSection({
         </div>
 
         {/* Mural de Orações */}
-        <div className="mt-6 grid grid-cols-1 gap-5 sm:mt-12 sm:gap-8 lg:grid-cols-12">
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:mt-12 sm:gap-8 lg:grid-cols-12">
           <form
             onSubmit={handleSubmitPrayer}
-            className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-6 lg:col-span-5"
+            className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:p-6 lg:col-span-5"
           >
-            <h3 className="font-editorial text-xl font-medium text-[#1C1917] sm:text-2xl">
+            <h3 className="font-editorial text-lg font-medium text-[#1C1917] sm:text-2xl">
               Deixar um pedido de oração ou gratidão
             </h3>
-            <p className="mt-1 text-xs leading-relaxed text-[#57534E] sm:mt-1.5">
+            <p className="mt-1 text-[11.5px] leading-relaxed text-[#57534E] sm:mt-1.5 sm:text-xs">
               Compartilhe pelo que você gostaria que outras pessoas orassem por você hoje.
             </p>
 
-            <div className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
+            <div className="mt-3 space-y-2.5 sm:mt-5 sm:space-y-4">
               <div>
-                <label htmlFor="prayer-intention" className="block text-xs font-semibold text-[#44403C]">
+                <label htmlFor="prayer-intention" className="block text-[11.5px] font-semibold text-[#44403C] sm:text-xs">
                   Tipo de registro
                 </label>
                 <select
                   id="prayer-intention"
                   value={intention}
                   onChange={(e) => setIntention(e.target.value as PrayerIntention)}
-                  className="mt-1 min-h-[40px] w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
+                  className="mt-1 min-h-[38px] w-full rounded-lg border border-[#DFCE91] bg-white px-2.5 py-1.5 text-base text-[#1C1917] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
                 >
                   {INTENTIONS.map((item) => (
                     <option key={item} value={item}>
@@ -857,7 +857,7 @@ export function GodSpaceSection({
               </div>
 
               <div>
-                <label htmlFor="prayer-author" className="block text-xs font-semibold text-[#44403C]">
+                <label htmlFor="prayer-author" className="block text-[11.5px] font-semibold text-[#44403C] sm:text-xs">
                   Seu nome ou iniciais (opcional)
                 </label>
                 <input
@@ -867,13 +867,13 @@ export function GodSpaceSection({
                   value={author}
                   onChange={(e) => setAuthor(e.target.value)}
                   placeholder="Ex.: Anônimo, Ana, L.M."
-                  className="mt-1 min-h-[40px] w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
+                  className="mt-1 min-h-[38px] w-full rounded-lg border border-[#DFCE91] bg-white px-2.5 py-1.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
                 />
               </div>
 
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <label htmlFor="prayer-content" className="block text-xs font-semibold text-[#44403C]">
+                  <label htmlFor="prayer-content" className="block text-[11.5px] font-semibold text-[#44403C] sm:text-xs">
                     Sua oração
                   </label>
                   <VoiceDictationButton
@@ -890,12 +890,12 @@ export function GodSpaceSection({
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Escreva ou fale seu pedido de oração, agradecimento ou palavra de consolo..."
-                  className="mt-1.5 w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:px-3.5 sm:py-2.5 sm:text-sm"
+                  className="mt-1.5 w-full rounded-lg border border-[#DFCE91] bg-white px-2.5 py-1.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:px-3.5 sm:py-2.5 sm:text-sm"
                 />
               </div>
 
               {feedback && (
-                <p role="status" className="text-xs font-medium text-[#13382C]">
+                <p role="status" className="text-[11.5px] font-medium text-[#13382C] sm:text-xs">
                   {feedback}
                 </p>
               )}
@@ -903,7 +903,7 @@ export function GodSpaceSection({
               <button
                 type="submit"
                 disabled={submitting || content.trim().length < 6}
-                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-lg bg-[#8A5A10] px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-[#72490B] active:scale-[0.98] disabled:opacity-50 cursor-pointer sm:min-h-[44px] sm:px-5 sm:py-2.5"
+                className="inline-flex min-h-[38px] w-full items-center justify-center gap-2 rounded-lg bg-[#8A5A10] px-4 py-1.5 text-xs font-semibold text-white transition-all duration-150 hover:bg-[#72490B] active:scale-[0.98] disabled:opacity-50 cursor-pointer sm:min-h-[44px] sm:px-5 sm:py-2.5"
               >
                 <Send className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>{submitting ? 'Enviando...' : 'Compartilhar no altar de oração'}</span>
@@ -911,12 +911,12 @@ export function GodSpaceSection({
             </div>
           </form>
 
-          <div className="space-y-3.5 sm:space-y-4 lg:col-span-7">
+          <div className="space-y-3 sm:space-y-4 lg:col-span-7">
             <div className="flex items-center justify-between">
-              <h3 className="font-editorial text-xl font-medium text-[#1C1917] sm:text-2xl">
+              <h3 className="font-editorial text-lg font-medium text-[#1C1917] sm:text-2xl">
                 Orações da comunidade
               </h3>
-              <span className="text-xs text-[#57534E] tabular-nums">
+              <span className="text-[11px] text-[#57534E] tabular-nums sm:text-xs">
                 {prayers.length} {prayers.length === 1 ? 'oração' : 'orações'}
               </span>
             </div>
@@ -924,27 +924,27 @@ export function GodSpaceSection({
             {prayers.map((prayer) => (
               <article
                 key={prayer.id}
-                className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-5"
+                className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:p-5"
               >
-                <div className="flex flex-wrap items-center gap-2 text-xs text-[#57534E]">
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[#57534E] sm:gap-2 sm:text-xs">
                   <span className="font-semibold text-[#8A5A10]">{prayer.author}</span>
                   <span aria-hidden="true">·</span>
                   <span>{prayer.intention}</span>
                   <span aria-hidden="true">·</span>
                   <span>{formatRelativeTimePt(prayer.createdAt)}</span>
                 </div>
-                <p className="mt-2.5 text-sm leading-relaxed text-[#1C1917]">{prayer.content}</p>
-                <div className="mt-4 border-t border-[#F4E9BF] pt-3">
+                <p className="mt-2 text-[13px] leading-relaxed text-[#1C1917] sm:mt-2.5 sm:text-sm">{prayer.content}</p>
+                <div className="mt-3 border-t border-[#F4E9BF] pt-2.5 sm:mt-4 sm:pt-3">
                   <button
                     type="button"
                     onClick={() => handlePrayFor(prayer.id)}
-                    className={`inline-flex min-h-[38px] items-center gap-2 text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer ${
+                    className={`inline-flex min-h-[34px] items-center gap-1.5 text-[11.5px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[38px] sm:gap-2 sm:text-xs ${
                       prayedIds[prayer.id]
                         ? 'text-[#8A5A10]'
                         : 'text-[#57534E] hover:text-[#8A5A10]'
                     }`}
                   >
-                    <HandHeart className="h-4 w-4" aria-hidden="true" />
+                    <HandHeart className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                     <span className="tabular-nums">
                       {prayedIds[prayer.id] ? 'Você está orando por esta vida' : 'Orar por essa vida'} ({prayer.prayingCount})
                     </span>

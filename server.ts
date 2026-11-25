@@ -96,7 +96,7 @@ function createInitialData(): SanctuaryData {
       },
       {
         id: 'vent-3',
-        author: 'Clara',
+        author: 'Larissa',
         category: 'Cansaço de viver',
         content:
           'Tem dias em que levantar da cama parece escalar uma montanha. Não quero deixar de existir, eu só queria que a dor desse uma trégua e que eu voltasse a sentir sentido nas coisas simples.',
@@ -333,6 +333,108 @@ function makeId(prefix: string): string {
 async function startServer() {
   const app = express();
   app.set('trust proxy', true);
+
+  app.post('/api/transcribe', express.json({ limit: '6mb' }), async (req, res) => {
+    if (isRateLimited(`transcribe:${getClientIp(req)}`, 20, 60_000)) {
+      res.status(429).json({
+        error: 'Muitas gravações em sequência. Aguarde um instante e tente novamente.',
+      });
+      return;
+    }
+
+    if (!process.env.GEMINI_API_KEY) {
+      res.status(503).json({
+        error: 'O reconhecimento de voz não está configurado no servidor.',
+      });
+      return;
+    }
+
+    const audioBase64 = typeof req.body?.audioBase64 === 'string' ? req.body.audioBase64.trim() : '';
+    const rawMime = typeof req.body?.mimeType === 'string' ? req.body.mimeType.trim().toLowerCase() : 'audio/webm';
+    const baseMime = rawMime.split(';')[0].trim();
+
+    const allowedAudioMimes = new Set([
+      'audio/webm',
+      'audio/mp4',
+      'audio/m4a',
+      'audio/x-m4a',
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/ogg',
+      'audio/wav',
+      'audio/wave',
+      'audio/aac',
+      'video/webm',
+      'video/mp4',
+    ]);
+
+    const normalizedMime =
+      baseMime === 'video/webm'
+        ? 'audio/webm'
+        : baseMime === 'video/mp4' || baseMime === 'audio/m4a' || baseMime === 'audio/x-m4a'
+          ? 'audio/mp4'
+          : allowedAudioMimes.has(baseMime)
+            ? baseMime
+            : 'audio/webm';
+
+    if (!audioBase64 || audioBase64.length < 100 || audioBase64.length > 5_500_000) {
+      res.status(400).json({
+        error: 'Áudio inválido ou muito longo. Tente gravar uma mensagem mais curta.',
+      });
+      return;
+    }
+
+    const transcribeModels = ['gemini-3.5-transcribe', 'gemini-3.5-flash-lite'] as const;
+    let lastErr: unknown = null;
+
+    for (const modelName of transcribeModels) {
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), 15_000),
+        );
+
+        const response = await Promise.race([
+          ai.models.generateContent({
+            model: modelName,
+            contents: {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: normalizedMime,
+                    data: audioBase64,
+                  },
+                },
+                {
+                  text: 'Transcreva exatamente o que foi falado neste áudio em português do Brasil. Retorne apenas a transcrição fiel do que a pessoa disse, sem comentários adicionais. Se não houver fala audível, retorne vazio.',
+                },
+              ],
+            },
+          }),
+          timeoutPromise,
+        ]);
+
+        const transcript = (response.text ?? '')
+          .replace(/^["'“”]+|["'“”]+$/g, '')
+          .trim();
+
+        res.json({ transcript });
+        return;
+      } catch (err) {
+        lastErr = err;
+        const msg = err instanceof Error ? err.message : String(err ?? '');
+        if (msg.includes('403') || msg.includes('PERMISSION_DENIED') || msg.includes('API_KEY_INVALID')) {
+          break;
+        }
+      }
+    }
+
+    const message = lastErr instanceof Error ? lastErr.message : String(lastErr ?? 'Erro transcrição');
+    console.error('[Sophia /api/transcribe error]:', message);
+    res.status(503).json({
+      error: 'Não foi possível transcrever o áudio agora. Você também pode digitar sua mensagem.',
+    });
+  });
+
   app.use(express.json({ limit: '64kb' }));
 
   app.get('/api/sanctuary', (_req, res) => {
@@ -601,14 +703,37 @@ async function startServer() {
       return;
     }
 
+    const rawRecovery = req.body?.recoveryContext;
+    let recoveryNote = '';
+    if (rawRecovery && typeof rawRecovery === 'object') {
+      const habitName = sanitizeText((rawRecovery as { habitName?: unknown }).habitName, 120);
+      const daysClean = Number((rawRecovery as { daysClean?: unknown }).daysClean);
+      const hoursClean = Number((rawRecovery as { hoursClean?: unknown }).hoursClean);
+      const bestDays = Number((rawRecovery as { bestDays?: unknown }).bestDays);
+      const relapseCount = Number((rawRecovery as { relapseCount?: unknown }).relapseCount);
+      const intent = sanitizeText((rawRecovery as { intent?: unknown }).intent, 24);
+      if (habitName) {
+        recoveryNote =
+          `\n\nContexto atual de "Minha Superação" compartilhado voluntariamente pela pessoa neste momento: ` +
+          `Objetivo: "${habitName}". Tempo atual: ${Number.isFinite(daysClean) ? daysClean : 0} dia(s) e ${Number.isFinite(hoursClean) ? hoursClean : 0} hora(s). ` +
+          `Recorde pessoal: ${Number.isFinite(bestDays) ? bestDays : 0} dia(s). Recaídas registradas: ${Number.isFinite(relapseCount) ? relapseCount : 0}. ` +
+          `Foco pedido: ${intent || 'apoio'}.`;
+      }
+    }
+
     const systemInstruction =
-      'Você é Clara, uma assistente gentil, acolhedora e respeitosa do site Aurora — Um novo começo, uma nova esperança, em português do Brasil. ' +
-      'Seu papel é ouvir pessoas que estão enfrentando dor emocional, vazio interior, excesso de trabalho, bullying na escola, comparação, solidão ou desânimo. ' +
+      'Você é Sophia, uma assistente virtual gentil, calma, acolhedora e respeitosa do site Aurora — Um novo começo, uma nova esperança, em português do Brasil. ' +
+      'Seu papel é ouvir pessoas que estão enfrentando dor emocional, vazio interior, excesso de trabalho, bullying na escola, comparação, solidão, desânimo ou lutando para superar vícios e hábitos difíceis na seção Minha Superação. ' +
       'Responda com empatia humana, calma e clareza (em 2 a 4 parágrafos curtos). ' +
       'Valide o sentimento da pessoa sem julgamentos, ofereça um passo pequeno e gentil para o momento presente, e quando fizer sentido ou for pedido, compartilhe um versículo bíblico consolador e motivos concretos de esperança. ' +
-      'Nunca substitua um psicólogo ou médico. Se a pessoa demonstrar risco de suicídio, desesperança extrema ou vontade de se machucar, acolha com muito carinho e oriente imediatamente a ligar gratuitamente para o CVV no número 188 (24 horas, em sigilo) ou conversar com alguém de confiança. ' +
-      'Escreva em texto simples e acolhedor, sem usar asteriscos, negrito ou formatação markdown. ' +
-      'Encerre com encorajamento sincero lembrando que ela consegue atravessar esse momento e não está sozinha.';
+      'Regras essenciais de segurança e saúde: ' +
+      '1) Deixe claro com naturalidade quando falar de saúde, dependências ou tratamentos que você é uma assistente virtual e não substitui médicos, psicólogos ou outros profissionais de saúde. ' +
+      '2) Na superação de vícios e hábitos: incentive com carinho, comemore cada dia e hora conquistados, ajude com estratégias práticas para lidar com fissura e gatilhos (respirar fundo, beber água, adiar 10 minutos, mudar de ambiente, pedir apoio a alguém de confiança) e acolha recaídas sem culpa, lembrando que recomeçar também é vencer. ' +
+      '3) Para dependências químicas (álcool, cigarro, drogas) ou uso de medicamentos: incentive acompanhamento médico ou psicológico (como UBS ou CAPS AD) e NUNCA recomende interromper álcool ou medicamentos de forma abrupta sem supervisão médica, pois a abstinência súbita pode oferecer riscos à saúde. ' +
+      '4) Se a pessoa demonstrar risco de suicídio, desesperança extrema ou vontade de se machucar, acolha com muito carinho e oriente imediatamente a ligar gratuitamente para o CVV no número 188 (24 horas, em sigilo) ou procurar atendimento de emergência e alguém de confiança. ' +
+      'Escreva em texto simples, calmo e acolhedor, sem usar asteriscos, negrito ou formatação markdown. ' +
+      'Encerre com encorajamento sincero lembrando que ela consegue atravessar esse momento e não está sozinha.' +
+      recoveryNote;
 
     const candidateModels = [
       'gemini-3.5-flash-lite',
@@ -651,7 +776,7 @@ async function startServer() {
     }
 
     const message = lastErr instanceof Error ? lastErr.message : String(lastErr ?? 'Erro desconhecido');
-    console.error('[Clara /api/assistant error]:', message);
+    console.error('[Sophia /api/assistant error]:', message);
 
     if (
       message.includes('403') ||
@@ -701,10 +826,13 @@ async function startServer() {
 
   function prepareNaturalSpeechText(raw: string): string {
     return raw
+      .replace(/\n{2,}/g, '... ')
+      .replace(/\n/g, ', ')
       .replace(/\s*·\s*/g, ', ')
       .replace(/\s*—\s*/g, '... ')
       .replace(/\s+-\s+/g, ', ')
       .replace(/:\s*/g, ': ')
+      .replace(/\bCVV\b/g, 'C V V')
       .replace(/\s+/g, ' ')
       .trim();
   }
@@ -743,13 +871,14 @@ async function startServer() {
     }
 
     const ttsAttempts: Array<{ model: string; voice: string }> = [
+      { model: 'gemini-3.8-flash-tts', voice: 'Sulafat' },
       { model: 'gemini-3.8-flash-tts', voice: 'Zephyr' },
       { model: 'gemini-3.8-flash-lite-tts', voice: 'Zephyr' },
       { model: 'gemini-3.8-flash-lite-tts', voice: 'Kore' },
     ];
 
     const voiceStyle =
-      'Speak in warm, authentic, empathetic Brazilian Portuguese as a caring woman having an intimate, calm conversation. Use natural human cadence with gentle breathing pauses at commas and periods, soft expressive melody, subtle genuine emotion, clear unhurried articulation, and an inviting timbre — never robotic or theatrical.';
+      'Speak in calm, gentle, comforting Brazilian Portuguese (pt-BR) as Sophia, a soothing and empathetic woman talking quietly with a close friend. Keep a moderate, unhurried pace with soft, natural breathing pauses between sentences and commas. Use clear pronunciation, subtle human warmth, peaceful steadiness, and delicate emotion — never rushed, never robotic, never overly dramatic or theatrical.';
 
     let lastErr: unknown = null;
     for (const attempt of ttsAttempts) {

@@ -7,10 +7,18 @@ import { GodSpaceSection } from './components/GodSpaceSection';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { MentalHealthSection } from './components/MentalHealthSection';
+import { MinhaSuperacaoSection } from './components/MinhaSuperacaoSection';
 import { ReasonsToLiveSection } from './components/ReasonsToLiveSection';
 import { VentWallSection } from './components/VentWallSection';
 import { AccessibilityProvider } from './context/AccessibilityContext';
-import type { Prayer, ReasonToLive, SanctuaryData, Vent, VentCategory } from './types';
+import type {
+  Prayer,
+  ReasonToLive,
+  SanctuaryData,
+  SophiaPromptRequest,
+  Vent,
+  VentCategory,
+} from './types';
 
 export default function App() {
   const [vents, setVents] = useState<Vent[]>([]);
@@ -22,6 +30,7 @@ export default function App() {
     category: VentCategory;
     trigger: number;
   } | null>(null);
+  const [sophiaPromptRequest, setSophiaPromptRequest] = useState<SophiaPromptRequest | null>(null);
 
   const loadSanctuary = useCallback(async () => {
     try {
@@ -147,6 +156,15 @@ export default function App() {
     el?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleAskSophia = useCallback((req: Omit<SophiaPromptRequest, 'trigger'>) => {
+    setSophiaPromptRequest((prev) => ({
+      ...req,
+      trigger: (prev?.trigger ?? 0) + 1,
+    }));
+    const el = document.getElementById('assistente');
+    el?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
   return (
     <AccessibilityProvider
       onNavigateSection={navigateToSection}
@@ -174,7 +192,9 @@ export default function App() {
 
           <MentalHealthSection onVentAboutTopic={handleVentAboutTopic} />
 
-          <AssistantSection />
+          <MinhaSuperacaoSection onAskSophia={handleAskSophia} />
+
+          <AssistantSection externalPromptRequest={sophiaPromptRequest} />
 
           <GodSpaceSection
             prayers={prayers}
