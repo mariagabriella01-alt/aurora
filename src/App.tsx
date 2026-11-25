@@ -123,6 +123,10 @@ export default function App() {
       if (reason) handleReasonUpdated(reason);
     });
 
+    es.addEventListener('serverless', () => {
+      es.close();
+    });
+
     return () => {
       es.close();
     };

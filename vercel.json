@@ -1,7 +1,53 @@
 {
   "functions": {
+    "api/tts.ts": {
+      "maxDuration": 30,
+      "includeFiles": "public/assets/aistudio/**"
+    },
+    "api/tts/status.ts": {
+      "maxDuration": 30,
+      "includeFiles": "public/assets/aistudio/**"
+    },
     "api/**/*.ts": {
       "maxDuration": 30
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/sanctuary",
+      "destination": "/api/sanctuary-api?route=sanctuary"
+    },
+    {
+      "source": "/api/sanctuary/stream",
+      "destination": "/api/sanctuary-api?route=stream"
+    },
+    {
+      "source": "/api/vents",
+      "destination": "/api/sanctuary-api?route=vents"
+    },
+    {
+      "source": "/api/vents/:id/embrace",
+      "destination": "/api/sanctuary-api?route=vent-embrace&id=:id"
+    },
+    {
+      "source": "/api/vents/:id/replies",
+      "destination": "/api/sanctuary-api?route=vent-reply&id=:id"
+    },
+    {
+      "source": "/api/prayers",
+      "destination": "/api/sanctuary-api?route=prayers"
+    },
+    {
+      "source": "/api/prayers/:id/pray",
+      "destination": "/api/sanctuary-api?route=prayer-pray&id=:id"
+    },
+    {
+      "source": "/api/reasons",
+      "destination": "/api/sanctuary-api?route=reasons"
+    },
+    {
+      "source": "/api/reasons/:id/heart",
+      "destination": "/api/sanctuary-api?route=reason-heart&id=:id"
+    }
+  ]
 }

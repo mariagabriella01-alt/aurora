@@ -289,7 +289,7 @@ export function AccessibilityProvider({
           const contentType = (res.headers.get('content-type') || '').toLowerCase();
 
           if (!res.ok) {
-            let apiError = 'Não foi possível gerar o áudio com a voz da Sophia agora.';
+            let apiError = 'Não foi possível gerar o áudio com a voz exclusiva da Shopia agora.';
             try {
               const errData = (await res.json()) as { error?: string };
               if (errData?.error) {
@@ -298,7 +298,7 @@ export function AccessibilityProvider({
             } catch {
               if (res.status === 404) {
                 apiError =
-                  'O serviço de voz (/api/tts) não foi encontrado neste servidor. Verifique a configuração da Vercel.';
+                  'O serviço de voz da Shopia (/api/tts) não foi encontrado neste servidor.';
               }
             }
             if (seq === speechSeqRef.current && !controller.signal.aborted) {
@@ -312,7 +312,7 @@ export function AccessibilityProvider({
             if (seq === speechSeqRef.current && !controller.signal.aborted) {
               setSpeakingId(null);
               setSpeechError(
-                'O servidor não retornou um áudio válido para a voz personalizada. Verifique as rotas /api na Vercel.',
+                'O servidor não retornou um áudio válido da Shopia.',
               );
             }
             return;
@@ -356,7 +356,7 @@ export function AccessibilityProvider({
           if ((err as { name?: string })?.name === 'AbortError') return;
           if (seq === speechSeqRef.current) {
             setSpeakingId(null);
-            setSpeechError('Erro de conexão ao gerar a voz personalizada da Sophia.');
+            setSpeechError('Erro de conexão ao gerar a voz exclusiva da Shopia.');
           }
         } finally {
           if (ttsAbortRef.current === controller) {

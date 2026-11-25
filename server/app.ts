@@ -1,4 +1,4 @@
-import { GoogleGenAI, type VoiceConfig } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
@@ -21,68 +21,55 @@ const IS_VERCEL = Boolean(process.env.VERCEL);
 const DATA_DIR = IS_VERCEL ? path.join('/tmp', 'aurora-data') : path.join(ROOT_DIR, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'sanctuary.json');
 
-function getGoogleApiKey(): string {
-  return (process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '').trim();
+const SHOPIA_GREETING_AUDIO_FILE = path.join(
+  ROOT_DIR,
+  'public',
+  'assets',
+  'aistudio',
+  'Oi__voc__est__bem__Eu_sou_a_So.._67203881.m4a',
+);
+
+function getGeminiApiKey(): string {
+  return (process.env.GEMINI_API_KEY || '').trim();
 }
 
-function getCustomVoiceConfig(): {
-  voiceId: string;
-  normalizedVoiceId: string;
-  voiceCacheKey: string;
-  safeHeaderTag: string;
-  replicatedInline: {
-    mimeType: string;
-    voiceSampleAudio: string;
-    consentAudio?: string;
-    signature?: string;
-  } | null;
-} {
-  const rawVoiceId = (
-    process.env.GOOGLE_CUSTOM_VOICE_ID ||
-    process.env.GEMINI_CUSTOM_VOICE_ID ||
-    ''
-  ).trim();
-  const normalizedVoiceId = rawVoiceId.replace(/^voices\//, '');
+function normalizeComparisonText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
 
-  const sampleAudio = (process.env.GOOGLE_VOICE_SAMPLE_AUDIO || '').trim();
-  const consentAudio = (process.env.GOOGLE_VOICE_CONSENT_AUDIO || '').trim();
-  const consentSig = (process.env.GOOGLE_VOICE_CONSENT_SIGNATURE || '').trim();
-  const replicatedInline =
-    sampleAudio && (consentAudio || consentSig)
-      ? {
-          mimeType: 'audio/wav',
-          voiceSampleAudio: sampleAudio,
-          ...(consentAudio ? { consentAudio } : {}),
-          ...(consentSig ? { signature: consentSig } : {}),
-        }
-      : null;
+const SHOPIA_GREETING_NORMALIZED = normalizeComparisonText(
+  'Oi, você está bem? Eu sou a Sophia, sua assistente virtual de acolhimento aqui na Aurora — um novo começo, uma nova esperança. Pode me contar o que está pesando hoje — seja vazio, trabalho demais, bullying na escola, comparação, superação de algum vício ou qualquer outra dor. Você não precisa enfrentar isso sem ser ouvido(a).',
+);
 
-  const safeHeaderTag = normalizedVoiceId
-    ? normalizedVoiceId.startsWith('voicekey_')
-      ? `${normalizedVoiceId.slice(0, 14)}...`
-      : normalizedVoiceId
-    : replicatedInline
-      ? 'replicated-inline'
-      : 'unconfigured';
+function isShopiaGreetingText(rawText: string): boolean {
+  const normalized = normalizeComparisonText(rawText);
+  return (
+    normalized === SHOPIA_GREETING_NORMALIZED ||
+    (normalized.startsWith('oi voce esta bem eu sou a sophia sua assistente virtual de acolhimento') &&
+      normalized.includes('voce nao precisa enfrentar isso sem ser ouvido'))
+  );
+}
 
-  const voiceCacheKey = normalizedVoiceId || (replicatedInline ? 'replicated-inline' : 'none');
+function getShopiaVoiceConfig() {
+  const apiUrl = (process.env.SHOPIA_TTS_API_URL || '').trim();
+  const apiKey = (process.env.SHOPIA_TTS_API_KEY || '').trim();
+  const voiceId = (process.env.SHOPIA_VOICE_ID || '').trim();
+  const model = (process.env.SHOPIA_TTS_MODEL || '').trim();
+  const greetingAudioAvailable = fs.existsSync(SHOPIA_GREETING_AUDIO_FILE);
 
   return {
-    voiceId: rawVoiceId,
-    normalizedVoiceId,
-    voiceCacheKey,
-    safeHeaderTag,
-    replicatedInline,
+    apiUrl,
+    apiKey,
+    voiceId,
+    model,
+    greetingAudioAvailable,
+    isConfigured: Boolean(apiUrl && apiKey && voiceId),
   };
-}
-
-function getConfiguredTtsModels(): string[] {
-  const preferred = (
-    process.env.GOOGLE_TTS_MODEL ||
-    process.env.GEMINI_TTS_MODEL ||
-    'gemini-3.8-flash-tts'
-  ).trim();
-  return Array.from(new Set([preferred, 'gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts']));
 }
 
 const ALLOWED_VENT_CATEGORIES: readonly VentCategory[] = [
@@ -407,24 +394,18 @@ export function createAuroraApiApp(): express.Express {
 
   let cachedApiKey = '';
   let cachedAi: GoogleGenAI | null = null;
-  let cachedAiTts: GoogleGenAI | null = null;
 
-  const getAiClients = (): { ai: GoogleGenAI; aiTts: GoogleGenAI } | null => {
-    const apiKey = getGoogleApiKey();
+  const getAiClient = (): GoogleGenAI | null => {
+    const apiKey = getGeminiApiKey();
     if (!apiKey) return null;
-    if (apiKey !== cachedApiKey || !cachedAi || !cachedAiTts) {
+    if (apiKey !== cachedApiKey || !cachedAi) {
       cachedApiKey = apiKey;
       cachedAi = new GoogleGenAI({
         apiKey,
         httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
       });
-      cachedAiTts = new GoogleGenAI({
-        apiKey,
-        apiVersion: 'v1beta',
-        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
-      });
     }
-    return { ai: cachedAi, aiTts: cachedAiTts };
+    return cachedAi;
   };
 
   app.post('/api/transcribe', express.json({ limit: '6mb' }), async (req, res) => {
@@ -435,8 +416,8 @@ export function createAuroraApiApp(): express.Express {
       return;
     }
 
-    const clients = getAiClients();
-    if (!clients) {
+    const aiClient = getAiClient();
+    if (!aiClient) {
       res.status(503).json({
         error: 'O reconhecimento de voz não está configurado no servidor.',
       });
@@ -488,7 +469,7 @@ export function createAuroraApiApp(): express.Express {
         );
 
         const response = await Promise.race([
-          clients.ai.models.generateContent({
+          aiClient.models.generateContent({
             model: modelName,
             contents: {
               parts: [
@@ -751,11 +732,11 @@ export function createAuroraApiApp(): express.Express {
       return;
     }
 
-    const clients = getAiClients();
-    if (!clients) {
+    const aiClient = getAiClient();
+    if (!aiClient) {
       res.status(503).json({
         error:
-          'A chave do serviço de inteligência artificial (GOOGLE_API_KEY ou GEMINI_API_KEY) não está configurada no servidor.',
+          'A chave do serviço de conversação (GEMINI_API_KEY) não está configurada no servidor.',
       });
       return;
     }
@@ -843,7 +824,7 @@ export function createAuroraApiApp(): express.Express {
           setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), 10_000),
         );
         const response = await Promise.race([
-          clients.ai.models.generateContent({
+          aiClient.models.generateContent({
             model: modelName,
             contents: normalizedTurns,
             config: {
@@ -907,225 +888,196 @@ export function createAuroraApiApp(): express.Express {
     });
   });
 
-  const ttsCache = new Map<string, Buffer>();
+  const ttsCache = new Map<string, { buffer: Buffer; contentType: string }>();
 
-  app.get('/api/tts/status', async (_req, res) => {
-    const clients = getAiClients();
-    const voiceCfg = getCustomVoiceConfig();
-    const models = getConfiguredTtsModels();
-
-    let projectStoredVoices: Array<{ id?: string; displayName?: string; type?: string }> = [];
-    let voicesListError: string | null = null;
-
-    if (clients) {
-      try {
-        const listed = await Promise.race([
-          clients.aiTts.voices.list({
-            api_version: 'v1beta',
-            type: ['replicated', 'prompted'],
-          }),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('voices.list timeout')), 5_000),
-          ),
-        ]);
-        if (Array.isArray(listed?.voices)) {
-          projectStoredVoices = listed.voices.map((v) => ({
-            id: v.id,
-            displayName: v.display_name,
-            type: v.type,
-          }));
-        }
-      } catch (err) {
-        voicesListError = err instanceof Error ? err.message : String(err ?? '');
-      }
-    }
-
+  app.get('/api/tts/status', (_req, res) => {
+    const cfg = getShopiaVoiceConfig();
     res.setHeader('Cache-Control', 'no-store');
     res.json({
-      hasApiKey: Boolean(clients),
-      customVoiceConfigured: Boolean(voiceCfg.normalizedVoiceId || voiceCfg.replicatedInline),
-      voiceId: voiceCfg.safeHeaderTag,
-      ttsModel: models[0],
-      projectStoredVoices,
-      voicesListError,
+      provider: 'shopia',
+      shopiaConfigured: cfg.isConfigured,
+      hasApiUrl: Boolean(cfg.apiUrl),
+      hasApiKey: Boolean(cfg.apiKey),
+      hasVoiceId: Boolean(cfg.voiceId),
+      voiceId: cfg.voiceId || 'unconfigured',
+      ttsModel: cfg.model || 'shopia-exclusive',
+      greetingAudioAvailable: cfg.greetingAudioAvailable,
+    });
+  });
+
+  app.get('/api/tts', (_req, res) => {
+    const cfg = getShopiaVoiceConfig();
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({
+      ok: cfg.isConfigured || cfg.greetingAudioAvailable,
+      provider: 'shopia',
+      shopiaConfigured: cfg.isConfigured,
+      hasApiUrl: Boolean(cfg.apiUrl),
+      hasApiKey: Boolean(cfg.apiKey),
+      hasVoiceId: Boolean(cfg.voiceId),
+      voiceId: cfg.voiceId || 'unconfigured',
+      ttsModel: cfg.model || 'shopia-exclusive',
+      greetingAudioAvailable: cfg.greetingAudioAvailable,
     });
   });
 
   app.post('/api/tts', async (req, res) => {
-    if (isRateLimited(`tts:${getClientIp(req)}`, 30, 60_000)) {
-      res.status(429).json({
-        error: 'Muitas solicitações de áudio em sequência. Aguarde alguns instantes.',
-      });
-      return;
-    }
+    try {
+      if (isRateLimited(`tts:${getClientIp(req)}`, 30, 60_000)) {
+        res.status(429).json({
+          error: 'Muitas solicitações de áudio em sequência. Aguarde alguns instantes.',
+        });
+        return;
+      }
 
-    const clients = getAiClients();
-    if (!clients) {
-      res.status(503).json({
-        error:
-          'A chave da API do Google (GOOGLE_API_KEY ou GEMINI_API_KEY) não está configurada no servidor.',
-        code: 'API_KEY_MISSING',
-      });
-      return;
-    }
+      const rawText = sanitizeText(req.body?.text, 2200);
+      if (!rawText) {
+        res.status(400).json({ error: 'Texto vazio para leitura com a voz da Shopia.' });
+        return;
+      }
 
-    const voiceCfg = getCustomVoiceConfig();
-    if (!voiceCfg.normalizedVoiceId && !voiceCfg.replicatedInline) {
-      res.status(503).json({
-        error:
-          'A voz personalizada da Sophia ainda não está configurada. Adicione GOOGLE_CUSTOM_VOICE_ID nas variáveis de ambiente da Vercel (ou nos Secrets) com o ID da sua voz replicada no Google AI Studio.',
-        code: 'CUSTOM_VOICE_NOT_CONFIGURED',
-      });
-      return;
-    }
+      const cfg = getShopiaVoiceConfig();
 
-    const rawText = sanitizeText(req.body?.text, 2200);
-    if (!rawText) {
-      res.status(400).json({ error: 'Texto vazio para leitura em voz.' });
-      return;
-    }
+      if (isShopiaGreetingText(rawText) && cfg.greetingAudioAvailable) {
+        const audioBuffer = fs.readFileSync(SHOPIA_GREETING_AUDIO_FILE);
+        res.setHeader('Content-Type', 'audio/mp4');
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('X-Aurora-Voice-Id', 'shopia-greeting');
+        res.setHeader('X-Aurora-Voice-Source', 'shopia-recorded-audio');
+        res.send(audioBuffer);
+        return;
+      }
 
-    const text = prepareNaturalSpeechText(rawText);
-    const candidateModels = getConfiguredTtsModels();
-    const cacheKey = `${candidateModels[0]}:${voiceCfg.voiceCacheKey}:${text}`;
+      if (!cfg.isConfigured) {
+        res.status(503).json({
+          error:
+            'A integração exclusiva da voz da Shopia ainda não está com todas as credenciais configuradas no servidor (SHOPIA_TTS_API_URL, SHOPIA_TTS_API_KEY e SHOPIA_VOICE_ID). Nenhuma outra voz ou Google TTS será usada como alternativa.',
+          code: 'SHOPIA_VOICE_NOT_CONFIGURED',
+        });
+        return;
+      }
 
-    const cached = ttsCache.get(cacheKey);
-    if (cached) {
-      ttsCache.delete(cacheKey);
-      ttsCache.set(cacheKey, cached);
-      res.setHeader('Content-Type', 'audio/wav');
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      res.setHeader('X-Aurora-Voice-Id', voiceCfg.safeHeaderTag);
-      res.setHeader('X-Aurora-TTS-Model', candidateModels[0]);
-      res.setHeader('X-Aurora-Voice-Source', 'google-voice-replication');
-      res.send(cached);
-      return;
-    }
+      const text = prepareNaturalSpeechText(rawText);
+      const cacheKey = `shopia:${cfg.voiceId}:${cfg.model}:${text}`;
 
-    const voiceConfig: VoiceConfig = voiceCfg.normalizedVoiceId
-      ? {
-          voice: voiceCfg.normalizedVoiceId,
-        }
-      : {
-          replicatedVoiceConfig: {
-            mimeType: voiceCfg.replicatedInline!.mimeType,
-            voiceSampleAudio: voiceCfg.replicatedInline!.voiceSampleAudio,
-            ...(voiceCfg.replicatedInline!.consentAudio
-              ? { consentAudio: voiceCfg.replicatedInline!.consentAudio }
-              : {}),
-            ...(voiceCfg.replicatedInline!.signature
-              ? { voiceConsentSignature: { signature: voiceCfg.replicatedInline!.signature } }
-              : {}),
+      const cached = ttsCache.get(cacheKey);
+      if (cached) {
+        ttsCache.delete(cacheKey);
+        ttsCache.set(cacheKey, cached);
+        res.setHeader('Content-Type', cached.contentType);
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('X-Aurora-Voice-Id', cfg.voiceId);
+        res.setHeader('X-Aurora-Voice-Source', 'shopia-tts');
+        res.send(cached.buffer);
+        return;
+      }
+
+      const targetUrl = cfg.apiUrl
+        .replace(/\{voice_id\}/gi, encodeURIComponent(cfg.voiceId))
+        .replace(/\{voiceId\}/g, encodeURIComponent(cfg.voiceId));
+
+      const isElevenLabs = /elevenlabs\.io/i.test(targetUrl);
+      const requestPayload = isElevenLabs
+        ? {
+            text,
+            ...(cfg.model ? { model_id: cfg.model } : {}),
+          }
+        : {
+            text,
+            voiceId: cfg.voiceId,
+            voice_id: cfg.voiceId,
+            ...(cfg.model ? { model: cfg.model } : {}),
+          };
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 18_000);
+
+      let upstreamRes: globalThis.Response;
+      try {
+        upstreamRes = await fetch(targetUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'audio/*, application/json',
+            Authorization: `Bearer ${cfg.apiKey}`,
+            'xi-api-key': cfg.apiKey,
+            'X-API-Key': cfg.apiKey,
           },
+          body: JSON.stringify(requestPayload),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!upstreamRes.ok) {
+        const errText = await upstreamRes.text().catch(() => '');
+        console.error('[Aurora Shopia /api/tts upstream error]:', upstreamRes.status, errText.slice(0, 300));
+        if (upstreamRes.status === 401 || upstreamRes.status === 403) {
+          res.status(502).json({
+            error:
+              'As credenciais da integração da Shopia (SHOPIA_TTS_API_KEY ou SHOPIA_VOICE_ID) foram recusadas pelo serviço da Shopia.',
+            code: 'SHOPIA_AUTH_ERROR',
+          });
+          return;
+        }
+        res.status(503).json({
+          error: 'Não foi possível gerar o áudio com a voz exclusiva da Shopia agora. Tente novamente em instantes.',
+          code: 'SHOPIA_TTS_UNAVAILABLE',
+        });
+        return;
+      }
+
+      const contentType = (upstreamRes.headers.get('content-type') || '').toLowerCase();
+      let audioBuffer: Buffer | null = null;
+      let outputMime = 'audio/mpeg';
+
+      if (contentType.includes('audio/') || contentType.includes('application/octet-stream')) {
+        const ab = await upstreamRes.arrayBuffer();
+        audioBuffer = Buffer.from(ab);
+        outputMime = contentType.includes('audio/') ? contentType.split(';')[0].trim() : 'audio/mpeg';
+      } else if (contentType.includes('application/json')) {
+        const json = (await upstreamRes.json()) as {
+          audioBase64?: string;
+          audio_base64?: string;
+          audio?: string;
+          data?: string;
+          mimeType?: string;
+          mime_type?: string;
         };
-
-    let lastErr: unknown = null;
-    for (const modelName of candidateModels) {
-      for (const withLanguageCode of [true, false]) {
-        try {
-          const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), 14_000),
-          );
-
-          const response = await Promise.race([
-            clients.aiTts.models.generateContent({
-              model: modelName,
-              contents: [
-                {
-                  role: 'user',
-                  parts: [{ text }],
-                },
-              ],
-              config: {
-                responseModalities: ['AUDIO'],
-                speechConfig: {
-                  ...(withLanguageCode ? { languageCode: 'pt-BR' } : {}),
-                  voiceConfig,
-                },
-              },
-            }),
-            timeoutPromise,
-          ]);
-
-          const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-          if (base64Audio) {
-            const wavBuffer = Buffer.from(base64Audio, 'base64');
-            if (ttsCache.size >= 80) {
-              const oldestKey = ttsCache.keys().next().value;
-              if (oldestKey !== undefined) ttsCache.delete(oldestKey);
-            }
-            ttsCache.set(cacheKey, wavBuffer);
-            res.setHeader('Content-Type', 'audio/wav');
-            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-            res.setHeader('X-Aurora-Voice-Id', voiceCfg.safeHeaderTag);
-            res.setHeader('X-Aurora-TTS-Model', modelName);
-            res.setHeader('X-Aurora-Voice-Source', 'google-voice-replication');
-            res.send(wavBuffer);
-            return;
-          }
-        } catch (err) {
-          lastErr = err;
-          const msg = err instanceof Error ? err.message : String(err ?? '');
-          if (withLanguageCode && msg.toLowerCase().includes('language')) {
-            continue;
-          }
-          if (
-            msg.includes('403') ||
-            msg.includes('PERMISSION_DENIED') ||
-            msg.includes('API_KEY_INVALID') ||
-            msg.includes('400') ||
-            msg.includes('INVALID_ARGUMENT') ||
-            msg.includes('NOT_FOUND')
-          ) {
-            break;
-          }
-          break;
+        const b64 = json.audioBase64 || json.audio_base64 || json.audio || json.data || '';
+        if (b64) {
+          audioBuffer = Buffer.from(b64, 'base64');
+          outputMime = json.mimeType || json.mime_type || 'audio/wav';
         }
       }
 
-      const lastMsg = lastErr instanceof Error ? lastErr.message : String(lastErr ?? '');
-      if (
-        lastMsg.includes('403') ||
-        lastMsg.includes('PERMISSION_DENIED') ||
-        lastMsg.includes('API_KEY_INVALID')
-      ) {
-        break;
+      if (!audioBuffer || audioBuffer.length === 0) {
+        res.status(503).json({
+          error: 'O serviço da Shopia retornou uma resposta de áudio vazia.',
+          code: 'SHOPIA_EMPTY_AUDIO',
+        });
+        return;
       }
-    }
 
-    const message = lastErr instanceof Error ? lastErr.message : String(lastErr ?? 'Erro TTS');
-    console.error('[Aurora /api/tts custom voice error]:', message);
+      if (ttsCache.size >= 80) {
+        const oldestKey = ttsCache.keys().next().value;
+        if (oldestKey !== undefined) ttsCache.delete(oldestKey);
+      }
+      ttsCache.set(cacheKey, { buffer: audioBuffer, contentType: outputMime });
 
-    if (
-      message.includes('403') ||
-      message.includes('PERMISSION_DENIED') ||
-      message.includes('API_KEY_INVALID')
-    ) {
-      res.status(502).json({
-        error:
-          'Permissão negada ou chave da API inválida ao gerar a voz personalizada. Verifique GOOGLE_API_KEY e se a conta está em Tier pago para Voice Replication.',
-        code: 'TTS_AUTH_ERROR',
+      res.setHeader('Content-Type', outputMime);
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('X-Aurora-Voice-Id', cfg.voiceId);
+      res.setHeader('X-Aurora-Voice-Source', 'shopia-tts');
+      res.send(audioBuffer);
+    } catch (err) {
+      console.error('[Aurora Shopia /api/tts error]:', err);
+      res.status(503).json({
+        error: 'Erro temporário ao gerar o áudio exclusivo da Shopia. Tente novamente em instantes.',
+        code: 'SHOPIA_INTERNAL_ERROR',
       });
-      return;
     }
-
-    if (
-      message.includes('400') ||
-      message.includes('INVALID_ARGUMENT') ||
-      message.includes('NOT_FOUND')
-    ) {
-      res.status(400).json({
-        error:
-          'O identificador da voz personalizada (GOOGLE_CUSTOM_VOICE_ID) não foi aceito pelo modelo. Confira se o ID está completo (ex.: voice_...) e pertence ao mesmo projeto da API.',
-        code: 'CUSTOM_VOICE_INVALID',
-      });
-      return;
-    }
-
-    res.status(503).json({
-      error: 'Não foi possível gerar o áudio com a voz personalizada da Sophia agora. Tente novamente em instantes.',
-      code: 'TTS_UNAVAILABLE',
-    });
   });
 
   return app;
