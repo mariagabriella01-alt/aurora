@@ -18,6 +18,8 @@ interface AccessibilityContextValue {
   speechInputSupported: boolean;
   speakingId: string | null;
   spokenCaption: string | null;
+  speechError: string | null;
+  clearSpeechError: () => void;
   autoReadAssistant: boolean;
   setAutoReadAssistant: (val: boolean) => void;
   easyVisualMode: boolean;
@@ -30,112 +32,6 @@ interface AccessibilityContextValue {
   stopSpeaking: () => void;
   startVoiceCommand: () => void;
   stopVoiceCommand: () => void;
-}
-
-const KNOWN_FEMALE_PT_KEYWORDS = [
-  'francisca',
-  'thalita',
-  'maria',
-  'heloisa',
-  'luciana',
-  'fernanda',
-  'vitoria',
-  'vitória',
-  'camila',
-  'leticia',
-  'letícia',
-  'isabela',
-  'sophia',
-  'sofia',
-  'joana',
-  'catarina',
-  'ines',
-  'inês',
-  'raquel',
-  'google português do brasil',
-  'google portugues do brasil',
-  'pt-br-x-afs',
-  'pt-br-x-pte',
-  'female',
-  'feminina',
-  'mulher',
-];
-
-const KNOWN_MALE_PT_KEYWORDS = [
-  'daniel',
-  'antonio',
-  'antónio',
-  'felipe',
-  'thiago',
-  'tiago',
-  'ricardo',
-  'gabriel',
-  'cristiano',
-  'duarte',
-  'humberto',
-  'julio',
-  'júlio',
-  'nicolau',
-  'male',
-  'masculin',
-  'pt-br-x-ptd',
-  'pt-br-x-ptm',
-];
-
-function selectFemalePortugueseVoice(voices: SpeechSynthesisVoice[]): {
-  voice: SpeechSynthesisVoice | null;
-  isExplicitlyFemale: boolean;
-} {
-  if (!voices || voices.length === 0) {
-    return { voice: null, isExplicitlyFemale: false };
-  }
-
-  const ptVoices = voices.filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith('pt'));
-  if (ptVoices.length === 0) {
-    return { voice: null, isExplicitlyFemale: false };
-  }
-
-  let bestVoice: SpeechSynthesisVoice | null = null;
-  let bestScore = -Infinity;
-  let bestIsFemale = false;
-
-  for (const voice of ptVoices) {
-    const lang = voice.lang.toLowerCase().replace('_', '-');
-    const name = `${voice.name} ${voice.voiceURI}`.toLowerCase();
-
-    const isFemale = KNOWN_FEMALE_PT_KEYWORDS.some((kw) => name.includes(kw));
-    const isMale = KNOWN_MALE_PT_KEYWORDS.some((kw) => name.includes(kw));
-
-    let score = 0;
-    if (lang === 'pt-br') score += 40;
-    else if (lang.startsWith('pt-br')) score += 30;
-    else if (lang.startsWith('pt')) score += 10;
-
-    if (isFemale) score += 100;
-    if (isMale) score -= 120;
-
-    if (
-      name.includes('natural') ||
-      name.includes('neural') ||
-      name.includes('online') ||
-      name.includes('enhanced') ||
-      name.includes('premium')
-    ) {
-      score += 25;
-    }
-
-    if (name.includes('google')) {
-      score += 15;
-    }
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestVoice = voice;
-      bestIsFemale = isFemale && !isMale;
-    }
-  }
-
-  return { voice: bestVoice, isExplicitlyFemale: bestIsFemale };
 }
 
 const AccessibilityContext = createContext<AccessibilityContextValue | null>(null);
@@ -151,11 +47,12 @@ export function AccessibilityProvider({
   onNavigateSection,
   onComposeVent,
 }: AccessibilityProviderProps) {
-  const speechOutputSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const speechOutputSupported = typeof window !== 'undefined' && typeof Audio !== 'undefined';
   const speechInputSupported = isAnyVoiceInputSupported();
 
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [spokenCaption, setSpokenCaption] = useState<string | null>(null);
+  const [speechError, setSpeechError] = useState<string | null>(null);
   const [autoReadAssistant, setAutoReadAssistant] = useState(true);
   const [easyVisualMode, setEasyVisualMode] = useState(false);
 
@@ -170,11 +67,15 @@ export function AccessibilityProvider({
   const commandTimerRef = useRef<number | null>(null);
   const commandCancelledRef = useRef(false);
 
-  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ttsAbortRef = useRef<AbortController | null>(null);
   const audioCacheRef = useRef<Map<string, string>>(new Map());
+  const activeVoiceTagRef = useRef<string | null>(null);
   const speechSeqRef = useRef(0);
+
+  const clearSpeechError = useCallback(() => {
+    setSpeechError(null);
+  }, []);
 
   const stopCommandStream = useCallback(() => {
     if (commandTimerRef.current !== null) {
@@ -193,27 +94,6 @@ export function AccessibilityProvider({
     }
   }, []);
 
-  useEffect(() => {
-    if (!speechOutputSupported) return;
-
-    const refreshVoices = () => {
-      try {
-        const list = window.speechSynthesis.getVoices();
-        if (list.length > 0) {
-          voicesRef.current = list;
-        }
-      } catch {
-        // Ignore voice enumeration errors
-      }
-    };
-
-    refreshVoices();
-    window.speechSynthesis.addEventListener?.('voiceschanged', refreshVoices);
-    return () => {
-      window.speechSynthesis.removeEventListener?.('voiceschanged', refreshVoices);
-    };
-  }, [speechOutputSupported]);
-
   const SILENT_WAV_URI =
     'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
 
@@ -230,7 +110,12 @@ export function AccessibilityProvider({
   const unlockMobileAudio = useCallback(() => {
     try {
       const player = getOrCreatePlayer();
-      if (!player.paused && player.currentTime > 0 && player.src && !player.src.startsWith('data:audio/wav')) {
+      if (
+        !player.paused &&
+        player.currentTime > 0 &&
+        player.src &&
+        !player.src.startsWith('data:audio/wav')
+      ) {
         return;
       }
       player.muted = true;
@@ -255,6 +140,17 @@ export function AccessibilityProvider({
     unlockMobileAudio();
   }, [unlockMobileAudio]);
 
+  const clearAudioCache = useCallback(() => {
+    for (const url of audioCacheRef.current.values()) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        // Ignore revoke errors
+      }
+    }
+    audioCacheRef.current.clear();
+  }, []);
+
   const stopActiveAudio = useCallback(() => {
     speechSeqRef.current += 1;
     if (ttsAbortRef.current) {
@@ -263,19 +159,12 @@ export function AccessibilityProvider({
     }
     if (audioRef.current) {
       try {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
         audioRef.current.onended = null;
         audioRef.current.onerror = null;
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
       } catch {
         // Ignore audio stop errors
-      }
-    }
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-      } catch {
-        // Ignore synthesis cancel errors
       }
     }
   }, []);
@@ -286,63 +175,22 @@ export function AccessibilityProvider({
     setSpokenCaption(null);
   }, [stopActiveAudio]);
 
-  const speakWithBrowserFallback = useCallback(
-    (text: string, id: string, seq: number) => {
-      if (seq !== speechSeqRef.current) return;
-      if (!speechOutputSupported) {
-        setSpeakingId(null);
-        return;
-      }
-
-      try {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'pt-BR';
-        utterance.rate = 0.96;
-
-        const liveVoices = window.speechSynthesis.getVoices();
-        const availableVoices = liveVoices.length > 0 ? liveVoices : voicesRef.current;
-        const { voice: femaleVoice, isExplicitlyFemale } =
-          selectFemalePortugueseVoice(availableVoices);
-
-        if (femaleVoice) {
-          utterance.voice = femaleVoice;
-        }
-        utterance.pitch = isExplicitlyFemale ? 1.04 : 1.08;
-
-        utterance.onstart = () => {
-          if (seq !== speechSeqRef.current) return;
-          setSpeakingId(id);
-          setSpokenCaption(text);
-        };
-        utterance.onend = () => {
-          if (seq !== speechSeqRef.current) return;
-          setSpeakingId(null);
-        };
-        utterance.onerror = () => {
-          if (seq !== speechSeqRef.current) return;
-          setSpeakingId(null);
-        };
-
-        window.speechSynthesis.speak(utterance);
-      } catch {
-        if (seq === speechSeqRef.current) {
-          setSpeakingId(null);
-        }
-      }
-    },
-    [speechOutputSupported],
-  );
-
   const playAudioUrl = useCallback(
-    (url: string, text: string, id: string, seq: number): Promise<boolean> => {
+    (
+      url: string,
+      text: string,
+      id: string,
+      seq: number,
+    ): Promise<{ ok: boolean; blocked?: boolean }> => {
       return new Promise((resolve) => {
         if (seq !== speechSeqRef.current) {
-          resolve(false);
+          resolve({ ok: false });
           return;
         }
         try {
           const audio = getOrCreatePlayer();
+          audio.onended = null;
+          audio.onerror = null;
           audio.muted = false;
           audio.playbackRate = 1.0;
           audio.pause();
@@ -356,19 +204,38 @@ export function AccessibilityProvider({
           };
 
           audio.onerror = () => {
-            resolve(false);
+            if (seq === speechSeqRef.current) {
+              setSpeakingId(null);
+            }
+            resolve({ ok: false });
           };
 
           setSpeakingId(id);
           setSpokenCaption(text);
           const playPromise = audio.play();
           if (playPromise && typeof playPromise.then === 'function') {
-            playPromise.then(() => resolve(true)).catch(() => resolve(false));
+            playPromise
+              .then(() => {
+                if (seq !== speechSeqRef.current) {
+                  try {
+                    audio.pause();
+                  } catch {
+                    // Ignore
+                  }
+                  resolve({ ok: false });
+                  return;
+                }
+                resolve({ ok: true });
+              })
+              .catch((err: unknown) => {
+                const name = (err as { name?: string })?.name || '';
+                resolve({ ok: false, blocked: name === 'NotAllowedError' });
+              });
           } else {
-            resolve(true);
+            resolve({ ok: true });
           }
         } catch {
-          resolve(false);
+          resolve({ ok: false });
         }
       });
     },
@@ -383,6 +250,7 @@ export function AccessibilityProvider({
       stopActiveAudio();
       const seq = speechSeqRef.current;
 
+      setSpeechError(null);
       setSpeakingId(id);
       setSpokenCaption(cleanText);
 
@@ -390,9 +258,14 @@ export function AccessibilityProvider({
       if (cachedUrl) {
         audioCacheRef.current.delete(cleanText);
         audioCacheRef.current.set(cleanText, cachedUrl);
-        void playAudioUrl(cachedUrl, cleanText, id, seq).then((ok) => {
+        void playAudioUrl(cachedUrl, cleanText, id, seq).then(({ ok, blocked }) => {
           if (!ok && seq === speechSeqRef.current) {
-            speakWithBrowserFallback(cleanText, id, seq);
+            setSpeakingId(null);
+            if (blocked) {
+              setSpeechError('Toque em "Ouvir Sophia" para iniciar a reprodução neste aparelho.');
+            } else {
+              setSpeechError('Não foi possível reproduzir o áudio neste navegador.');
+            }
           }
         });
         return;
@@ -408,12 +281,49 @@ export function AccessibilityProvider({
           const res = await fetch('/api/tts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store',
             body: JSON.stringify({ text: cleanText.slice(0, 2200) }),
             signal: controller.signal,
           });
 
+          const contentType = (res.headers.get('content-type') || '').toLowerCase();
+
           if (!res.ok) {
-            throw new Error(`TTS HTTP ${res.status}`);
+            let apiError = 'Não foi possível gerar o áudio com a voz da Sophia agora.';
+            try {
+              const errData = (await res.json()) as { error?: string };
+              if (errData?.error) {
+                apiError = errData.error;
+              }
+            } catch {
+              if (res.status === 404) {
+                apiError =
+                  'O serviço de voz (/api/tts) não foi encontrado neste servidor. Verifique a configuração da Vercel.';
+              }
+            }
+            if (seq === speechSeqRef.current && !controller.signal.aborted) {
+              setSpeakingId(null);
+              setSpeechError(apiError);
+            }
+            return;
+          }
+
+          if (!contentType.includes('audio/')) {
+            if (seq === speechSeqRef.current && !controller.signal.aborted) {
+              setSpeakingId(null);
+              setSpeechError(
+                'O servidor não retornou um áudio válido para a voz personalizada. Verifique as rotas /api na Vercel.',
+              );
+            }
+            return;
+          }
+
+          const voiceTag = res.headers.get('x-aurora-voice-id');
+          if (voiceTag && activeVoiceTagRef.current && activeVoiceTagRef.current !== voiceTag) {
+            clearAudioCache();
+          }
+          if (voiceTag) {
+            activeVoiceTagRef.current = voiceTag;
           }
 
           const blob = await res.blob();
@@ -433,14 +343,20 @@ export function AccessibilityProvider({
           }
           audioCacheRef.current.set(cleanText, objectUrl);
 
-          const ok = await playAudioUrl(objectUrl, cleanText, id, seq);
+          const { ok, blocked } = await playAudioUrl(objectUrl, cleanText, id, seq);
           if (!ok && seq === speechSeqRef.current) {
-            speakWithBrowserFallback(cleanText, id, seq);
+            setSpeakingId(null);
+            if (blocked) {
+              setSpeechError('Toque em "Ouvir Sophia" para iniciar o áudio neste aparelho.');
+            } else {
+              setSpeechError('Não foi possível reproduzir o áudio gerado neste aparelho.');
+            }
           }
         } catch (err) {
           if ((err as { name?: string })?.name === 'AbortError') return;
           if (seq === speechSeqRef.current) {
-            speakWithBrowserFallback(cleanText, id, seq);
+            setSpeakingId(null);
+            setSpeechError('Erro de conexão ao gerar a voz personalizada da Sophia.');
           }
         } finally {
           if (ttsAbortRef.current === controller) {
@@ -449,7 +365,7 @@ export function AccessibilityProvider({
         }
       })();
     },
-    [playAudioUrl, speakWithBrowserFallback, stopActiveAudio, unlockMobileAudio],
+    [clearAudioCache, playAudioUrl, stopActiveAudio, unlockMobileAudio],
   );
 
   const executeVoiceCommand = useCallback(
@@ -748,7 +664,6 @@ export function AccessibilityProvider({
   }, [executeVoiceCommand, prepareAudioForPlayback, startCommandRecorderFallback, stopSpeaking]);
 
   useEffect(() => {
-    const cache = audioCacheRef.current;
     return () => {
       commandCancelledRef.current = true;
       try {
@@ -758,15 +673,12 @@ export function AccessibilityProvider({
         }
         stopCommandStream();
         stopActiveAudio();
-        for (const url of cache.values()) {
-          URL.revokeObjectURL(url);
-        }
-        cache.clear();
+        clearAudioCache();
       } catch {
         // Ignore cleanup errors
       }
     };
-  }, [stopActiveAudio, stopCommandStream]);
+  }, [clearAudioCache, stopActiveAudio, stopCommandStream]);
 
   return (
     <AccessibilityContext.Provider
@@ -775,6 +687,8 @@ export function AccessibilityProvider({
         speechInputSupported,
         speakingId,
         spokenCaption,
+        speechError,
+        clearSpeechError,
         autoReadAssistant,
         setAutoReadAssistant,
         easyVisualMode,

@@ -24,6 +24,8 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
   const {
     speakingId,
     spokenCaption,
+    speechError,
+    clearSpeechError,
     autoReadAssistant,
     setAutoReadAssistant,
     easyVisualMode,
@@ -174,14 +176,21 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
           </p>
         </div>
 
-        {(commandFeedback || lastCommandHeard || spokenCaption) && (
+        {(speechError || commandFeedback || lastCommandHeard || spokenCaption) && (
           <div
             aria-live="polite"
-            className="animate-fade-soft mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#EADCA6] bg-[#FFFDF4] px-3 py-1.5 text-[11px] text-[#1C1917] sm:mt-3 sm:px-3.5 sm:py-2 sm:text-xs"
+            className={`animate-fade-soft mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-1.5 text-[11px] sm:mt-3 sm:px-3.5 sm:py-2 sm:text-xs ${
+              speechError
+                ? 'border-red-300 bg-red-50 text-red-800'
+                : 'border-[#EADCA6] bg-[#FFFDF4] text-[#1C1917]'
+            }`}
           >
             <div>
-              {commandFeedback && <span className="font-medium text-[#13382C]">{commandFeedback}</span>}
-              {!commandFeedback && spokenCaption && (
+              {speechError && <span className="font-medium">{speechError}</span>}
+              {!speechError && commandFeedback && (
+                <span className="font-medium text-[#13382C]">{commandFeedback}</span>
+              )}
+              {!speechError && !commandFeedback && spokenCaption && (
                 <span>
                   <strong className="font-semibold text-[#13382C]">Legenda em áudio:</strong>{' '}
                   {spokenCaption.slice(0, 180)}
@@ -189,15 +198,26 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
                 </span>
               )}
             </div>
-            {speakingId && (
-              <button
-                type="button"
-                onClick={stopSpeaking}
-                className="font-semibold text-[#5C3A21] underline underline-offset-2 cursor-pointer"
-              >
-                Silenciar voz
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {speechError && (
+                <button
+                  type="button"
+                  onClick={clearSpeechError}
+                  className="font-semibold text-red-900 underline underline-offset-2 cursor-pointer"
+                >
+                  Fechar aviso
+                </button>
+              )}
+              {speakingId && (
+                <button
+                  type="button"
+                  onClick={stopSpeaking}
+                  className="font-semibold text-[#5C3A21] underline underline-offset-2 cursor-pointer"
+                >
+                  Silenciar voz
+                </button>
+              )}
+            </div>
           </div>
         )}
 

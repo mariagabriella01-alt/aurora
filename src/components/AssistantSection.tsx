@@ -31,7 +31,8 @@ const QUICK_PROMPTS = [
 ];
 
 export function AssistantSection({ externalPromptRequest }: AssistantSectionProps) {
-  const { autoReadAssistant, prepareAudioForPlayback, speak } = useAccessibility();
+  const { autoReadAssistant, clearSpeechError, prepareAudioForPlayback, speak, speechError } =
+    useAccessibility();
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -264,6 +265,22 @@ export function AssistantSection({ externalPromptRequest }: AssistantSectionProp
                   className="mx-3 mb-2 rounded-lg border border-[#13382C]/25 bg-[#13382C]/5 px-2.5 py-1.5 text-[11px] text-[#13382C] sm:mx-5 sm:px-3.5 sm:py-2 sm:text-xs"
                 >
                   {voiceStatus}
+                </div>
+              )}
+
+              {speechError && !error && (
+                <div
+                  aria-live="polite"
+                  className="mx-3 mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-300 bg-red-50 px-2.5 py-1.5 text-[11px] text-red-800 sm:mx-5 sm:mb-3 sm:px-3.5 sm:py-2.5 sm:text-xs"
+                >
+                  <span>{speechError}</span>
+                  <button
+                    type="button"
+                    onClick={clearSpeechError}
+                    className="font-semibold text-red-900 underline underline-offset-2 cursor-pointer"
+                  >
+                    Fechar
+                  </button>
                 </div>
               )}
 
