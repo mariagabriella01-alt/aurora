@@ -109,11 +109,11 @@ export function ReasonsToLiveSection({
       : reasons;
 
   return (
-    <section id="motivos" className="border-b border-[#EADCA6] bg-[#FDF6DC] py-12 sm:py-16 lg:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section id="motivos" className="border-b border-[#EADCA6] bg-[#FDF6DC] py-8 sm:py-16 lg:py-20">
+      <div className="mx-auto max-w-6xl px-3.5 sm:px-6">
         {/* Scenic Sunrise Anchor */}
         <div className="relative overflow-hidden rounded-2xl border border-[#EADCA6] bg-[#1C1917]">
-          <div className="h-64 sm:h-80 w-full">
+          <div className="h-44 w-full sm:h-80">
             <ResilientImage
               src="/src/assets/images/reasons_sunrise_horizon_1795530097407.jpg"
               alt="Amanhecer sereno sobre lago calmo e colinas com neblina dourada"
@@ -125,21 +125,21 @@ export function ReasonsToLiveSection({
             aria-hidden="true"
             className="absolute inset-0 bg-gradient-to-t from-[#1C1917]/90 via-[#1C1917]/55 to-[#1C1917]/20"
           />
-          <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10">
-            <p className="text-xs font-medium tracking-widest uppercase text-[#F6E2A8]">
+          <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10">
+            <p className="text-[11px] font-medium tracking-widest uppercase text-[#F6E2A8] sm:text-xs">
               04 · Motivos para viver
             </p>
-            <h2 className="font-editorial mt-2 max-w-2xl text-2xl font-medium leading-tight text-white sm:text-4xl text-balance">
+            <h2 className="font-editorial mt-1 max-w-2xl text-xl font-medium leading-tight text-white sm:mt-2 sm:text-4xl text-balance">
               Pequenas e grandes razões para continuar aqui hoje
             </h2>
           </div>
         </div>
 
         {/* Daily Hope Spotlight */}
-        <div className="mt-8 rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#13382C]">
-              <Sun className="h-4 w-4" aria-hidden="true" />
+        <div className="mt-5 rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:mt-8 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 text-[11px] font-semibold text-[#13382C] sm:text-xs">
+              <Sun className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
               <span>Lembrete de esperança para hoje</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -151,33 +151,33 @@ export function ReasonsToLiveSection({
               <button
                 type="button"
                 onClick={() => setAnchorIndex((prev) => (prev + 1) % DAILY_ANCHORS.length)}
-                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-[#DFCE91] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#1C1917] transition-colors hover:bg-[#FAF0CA] cursor-pointer"
+                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#DFCE91] bg-white px-3 py-1 text-[11px] font-semibold text-[#1C1917] transition-colors hover:bg-[#FAF0CA] cursor-pointer sm:min-h-[38px] sm:px-3.5 sm:py-1.5 sm:text-xs"
               >
                 <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Ler outro motivo</span>
               </button>
             </div>
           </div>
-          <p className="font-editorial mt-4 text-2xl leading-snug text-[#1C1917] sm:text-3xl">
+          <p className="font-editorial mt-3 text-xl leading-snug text-[#1C1917] sm:mt-4 sm:text-3xl">
             “{DAILY_ANCHORS[anchorIndex]}”
           </p>
         </div>
 
         {/* Mural + Personal Anchor Box */}
-        <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="mt-6 grid grid-cols-1 gap-5 sm:mt-10 sm:gap-8 lg:grid-cols-12">
           <form
             onSubmit={handleCreateReason}
-            className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 sm:p-6 lg:col-span-5"
+            className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-6 lg:col-span-5"
           >
-            <h3 className="font-editorial text-2xl font-medium text-[#1C1917]">
+            <h3 className="font-editorial text-xl font-medium text-[#1C1917] sm:text-2xl">
               Compartilhar um motivo para viver
             </h3>
-            <p className="mt-1.5 text-xs leading-relaxed text-[#57534E]">
+            <p className="mt-1 text-xs leading-relaxed text-[#57534E] sm:mt-1.5">
               O que faz você continuar nos dias difíceis? Sua resposta pode ser a luz que alguém
               procura hoje.
             </p>
 
-            <div className="mt-5 space-y-4">
+            <div className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
               <div>
                 <label htmlFor="reason-theme" className="block text-xs font-semibold text-[#44403C]">
                   Tema
@@ -186,7 +186,7 @@ export function ReasonsToLiveSection({
                   id="reason-theme"
                   value={theme}
                   onChange={(e) => setTheme(e.target.value as ReasonTheme)}
-                  className="mt-1.5 min-h-[44px] w-full rounded-lg border border-[#DFCE91] bg-white px-3.5 py-2.5 text-base text-[#1C1917] sm:text-sm"
+                  className="mt-1 min-h-[40px] w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
                 >
                   {THEMES.map((item) => (
                     <option key={item} value={item}>
@@ -207,7 +207,7 @@ export function ReasonsToLiveSection({
                   value={author}
                   onChange={(e) => setAuthor(e.target.value)}
                   placeholder="Ex.: Anônimo, Júlia, Alguém em paz"
-                  className="mt-1.5 min-h-[44px] w-full rounded-lg border border-[#DFCE91] bg-white px-3.5 py-2.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:text-sm"
+                  className="mt-1 min-h-[40px] w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
                 />
               </div>
 
@@ -222,14 +222,14 @@ export function ReasonsToLiveSection({
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Ex.: Ver minha família sorrir, sentir o sol da manhã, realizar um sonho..."
-                  className="mt-1.5 w-full rounded-lg border border-[#DFCE91] bg-white px-3.5 py-2.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:text-sm"
+                  className="mt-1 w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:mt-1.5 sm:px-3.5 sm:py-2.5 sm:text-sm"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting || content.trim().length < 6}
-                className="min-h-[44px] w-full rounded-lg bg-[#13382C] px-5 py-2.5 text-xs font-semibold text-[#FEF9E6] transition-colors hover:bg-[#0D281F] disabled:opacity-50 cursor-pointer"
+                className="min-h-[42px] w-full rounded-lg bg-[#13382C] px-4 py-2 text-xs font-semibold text-[#FEF9E6] transition-all duration-150 hover:bg-[#0D281F] active:scale-[0.98] disabled:opacity-50 cursor-pointer sm:min-h-[44px] sm:px-5 sm:py-2.5"
               >
                 {submitting ? 'Publicando...' : 'Adicionar ao mural da esperança'}
               </button>
@@ -237,12 +237,12 @@ export function ReasonsToLiveSection({
           </form>
 
           <div className="lg:col-span-7">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
               <div className="flex w-full rounded-lg bg-[#FAF0CA] p-1 sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setViewMode('all')}
-                  className={`min-h-[38px] flex-1 rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer sm:flex-initial ${
+                  className={`min-h-[36px] flex-1 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[38px] sm:flex-initial sm:px-3.5 sm:py-1.5 sm:text-xs ${
                     viewMode === 'all'
                       ? 'bg-white text-[#1C1917] shadow-xs'
                       : 'text-[#57534E] hover:text-[#1C1917]'
@@ -253,7 +253,7 @@ export function ReasonsToLiveSection({
                 <button
                   type="button"
                   onClick={() => setViewMode('saved')}
-                  className={`min-h-[38px] flex-1 rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer sm:flex-initial ${
+                  className={`min-h-[36px] flex-1 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[38px] sm:flex-initial sm:px-3.5 sm:py-1.5 sm:text-xs ${
                     viewMode === 'saved'
                       ? 'bg-white text-[#1C1917] shadow-xs'
                       : 'text-[#57534E] hover:text-[#1C1917]'
@@ -264,9 +264,9 @@ export function ReasonsToLiveSection({
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-3.5 sm:mt-5 sm:grid-cols-2 sm:gap-4">
               {displayedReasons.length === 0 ? (
-                <div className="col-span-full rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-8 text-center text-sm text-[#57534E]">
+                <div className="col-span-full rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-6 text-center text-sm text-[#57534E] sm:p-8">
                   Você ainda não guardou nenhum motivo na sua caixa. Clique em “Guardar âncora” nos cartões que tocarem seu coração.
                 </div>
               ) : (
@@ -275,14 +275,14 @@ export function ReasonsToLiveSection({
                   return (
                     <article
                       key={reason.id}
-                      className="flex flex-col justify-between rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5"
+                      className="flex flex-col justify-between rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-5"
                     >
                       <div>
-                        <p className="text-xs text-[#57534E]">
+                        <p className="text-[11px] text-[#57534E] sm:text-xs">
                           <span className="font-semibold text-[#13382C]">{reason.theme}</span> ·{' '}
                           {reason.author} · {formatRelativeTimePt(reason.createdAt)}
                         </p>
-                        <p className="mt-3 text-sm leading-relaxed text-[#1C1917]">
+                        <p className="mt-2 text-[13.5px] leading-relaxed text-[#1C1917] sm:mt-3 sm:text-sm">
                           {reason.content}
                         </p>
                       </div>

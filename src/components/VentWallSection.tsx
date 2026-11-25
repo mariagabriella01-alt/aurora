@@ -221,39 +221,39 @@ export function VentWallSection({
     filter === 'Todos' ? vents : vents.filter((v) => v.category === filter);
 
   return (
-    <section id="desabafar" className="border-b border-[#EADCA6] bg-[#FEF9E6] py-12 sm:py-16 lg:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section id="desabafar" className="border-b border-[#EADCA6] bg-[#FEF9E6] py-8 sm:py-16 lg:py-20">
+      <div className="mx-auto max-w-6xl px-3.5 sm:px-6">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium tracking-widest uppercase text-[#57534E]">
+          <p className="text-[11px] font-medium tracking-widest uppercase text-[#57534E] sm:text-xs">
             01 · Escuta e acolhimento humano
           </p>
-          <h2 className="font-editorial mt-2 text-3xl font-medium text-[#1C1917] sm:text-4xl text-balance">
+          <h2 className="font-editorial mt-1.5 text-2xl font-medium text-[#1C1917] sm:mt-2 sm:text-4xl text-balance">
             Coloque para fora o que está doendo — e ajude quem precisa ser ouvido
           </h2>
-          <p className="mt-3 text-base leading-relaxed text-[#57534E]">
+          <p className="mt-2.5 text-[14.5px] leading-relaxed text-[#57534E] sm:mt-3 sm:text-base">
             Às vezes o vazio diminui quando ganha palavras. Escreva para a comunidade receber apoio
             ou guarde apenas para você em uma carta privada.
           </p>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-8 sm:mt-10 lg:grid-cols-12 lg:gap-10">
+        <div className="mt-5 grid grid-cols-1 gap-5 sm:mt-10 sm:gap-8 lg:grid-cols-12 lg:gap-10">
           {/* Composer */}
           <div className="lg:col-span-5">
             <form
               onSubmit={handleSubmitVent}
-              className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 sm:p-6"
+              className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-6"
             >
-              <div className="flex items-center justify-between gap-4 border-b border-[#EADCA6] pb-4">
-                <h3 className="font-editorial text-2xl font-medium text-[#1C1917]">
+              <div className="flex items-center justify-between gap-3 border-b border-[#EADCA6] pb-3 sm:gap-4 sm:pb-4">
+                <h3 className="font-editorial text-xl font-medium text-[#1C1917] sm:text-2xl">
                   Escrever desabafo
                 </h3>
               </div>
 
-              <div className="mt-4 flex rounded-lg bg-[#FAF0CA] p-1">
+              <div className="mt-3 flex rounded-lg bg-[#FAF0CA] p-1 sm:mt-4">
                 <button
                   type="button"
                   onClick={() => setMode('community')}
-                  className={`min-h-[40px] flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer ${
+                  className={`min-h-[38px] flex-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[40px] sm:px-3 sm:py-2 sm:text-xs ${
                     mode === 'community'
                       ? 'bg-white text-[#1C1917] shadow-xs'
                       : 'text-[#57534E] hover:text-[#1C1917]'
@@ -264,7 +264,7 @@ export function VentWallSection({
                 <button
                   type="button"
                   onClick={() => setMode('private')}
-                  className={`inline-flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer ${
+                  className={`inline-flex min-h-[38px] flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[40px] sm:px-3 sm:py-2 sm:text-xs ${
                     mode === 'private'
                       ? 'bg-white text-[#1C1917] shadow-xs'
                       : 'text-[#57534E] hover:text-[#1C1917]'
@@ -275,7 +275,7 @@ export function VentWallSection({
                 </button>
               </div>
 
-              <div className="mt-5 space-y-4">
+              <div className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
                 <div>
                   <label
                     htmlFor="vent-category"
@@ -287,7 +287,7 @@ export function VentWallSection({
                     id="vent-category"
                     value={category}
                     onChange={(e) => setCategory(e.target.value as VentCategory)}
-                    className="mt-1.5 min-h-[44px] w-full rounded-lg border border-[#DFCE91] bg-white px-3.5 py-2.5 text-base text-[#1C1917] sm:text-sm"
+                    className="mt-1 min-h-[40px] w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
                   >
                     {CATEGORIES.map((cat) => (
                       <option key={cat} value={cat}>
@@ -312,7 +312,7 @@ export function VentWallSection({
                       value={author}
                       onChange={(e) => setAuthor(e.target.value)}
                       placeholder="Ex.: Anônimo, Maria, Um coração cansado"
-                      className="mt-1.5 min-h-[44px] w-full rounded-lg border border-[#DFCE91] bg-white px-3.5 py-2.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:text-sm"
+                      className="mt-1 min-h-[40px] w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:mt-1.5 sm:min-h-[44px] sm:px-3.5 sm:py-2.5 sm:text-sm"
                     />
                   </div>
                 )}
@@ -334,12 +334,12 @@ export function VentWallSection({
                   </div>
                   <textarea
                     id="vent-textarea"
-                    rows={5}
+                    rows={4}
                     maxLength={1200}
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="Escreva ou toque em Falar desabafo para contar o que está sentindo..."
-                    className="mt-1.5 w-full rounded-lg border border-[#DFCE91] bg-white px-3.5 py-3 text-base leading-relaxed text-[#1C1917] placeholder:text-[#A8A29E] sm:text-sm"
+                    className="mt-1.5 w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2.5 text-base leading-relaxed text-[#1C1917] placeholder:text-[#A8A29E] sm:px-3.5 sm:py-3 sm:text-sm"
                   />
                   <p className="mt-1 text-right text-xs text-[#78716C] tabular-nums">
                     {content.length}/1200
@@ -392,9 +392,9 @@ export function VentWallSection({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-lg bg-[#13382C] px-5 py-3 text-sm font-semibold text-[#FEF9E6] transition-colors duration-150 hover:bg-[#0D281F] disabled:opacity-60 cursor-pointer"
+                  className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-lg bg-[#13382C] px-4 py-2.5 text-[13px] font-semibold text-[#FEF9E6] transition-all duration-150 hover:bg-[#0D281F] active:scale-[0.98] disabled:opacity-60 cursor-pointer sm:min-h-[46px] sm:px-5 sm:py-3 sm:text-sm"
                 >
-                  <Send className="h-4 w-4" aria-hidden="true" />
+                  <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                   <span>
                     {submitting
                       ? 'Enviando...'
@@ -407,7 +407,7 @@ export function VentWallSection({
             </form>
 
             {privateVents.length > 0 && (
-              <div className="mt-6 rounded-xl border border-[#EADCA6] bg-[#FAF0CA] p-5">
+              <div className="mt-5 rounded-xl border border-[#EADCA6] bg-[#FAF0CA] p-4 sm:mt-6 sm:p-5">
                 <div className="flex items-center justify-between">
                   <h4 className="font-editorial text-xl font-medium text-[#1C1917]">
                     Seus desabafos privados
@@ -451,13 +451,13 @@ export function VentWallSection({
 
           {/* Community Feed */}
           <div className="lg:col-span-7">
-            <div className="flex flex-wrap items-center gap-1.5 rounded-lg bg-[#FAF0CA] p-1.5">
+            <div className="flex flex-wrap items-center gap-1 rounded-lg bg-[#FAF0CA] p-1 sm:gap-1.5 sm:p-1.5">
               {(['Todos', ...CATEGORIES] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => setFilter(tab)}
-                  className={`min-h-[38px] rounded-md px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  className={`min-h-[34px] rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-1.5 sm:text-xs ${
                     filter === tab
                       ? 'bg-white text-[#1C1917] shadow-xs'
                       : 'text-[#57534E] hover:text-[#1C1917]'
@@ -468,22 +468,22 @@ export function VentWallSection({
               ))}
             </div>
 
-            <div className="mt-6 space-y-5">
+            <div className="mt-4 space-y-4 sm:mt-6 sm:space-y-5">
               {loading ? (
-                <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-8 text-center text-sm text-[#57534E]">
+                <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-6 text-center text-sm text-[#57534E] sm:p-8">
                   Carregando desabafos da comunidade...
                 </div>
               ) : filteredVents.length === 0 ? (
-                <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-8 text-center text-sm text-[#57534E]">
+                <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-6 text-center text-sm text-[#57534E] sm:p-8">
                   Ainda não há desabafos nessa categoria. Se quiser, você pode ser a primeira pessoa a escrever.
                 </div>
               ) : (
                 filteredVents.map((vent) => (
                   <article
                     key={vent.id}
-                    className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 sm:p-6"
+                    className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-6"
                   >
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#57534E]">
+                    <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[#57534E] sm:gap-2 sm:text-xs">
                       <span className="font-semibold text-[#13382C]">{vent.author}</span>
                       <span aria-hidden="true">·</span>
                       <span>{vent.category}</span>
@@ -491,11 +491,11 @@ export function VentWallSection({
                       <span>{formatRelativeTimePt(vent.createdAt)}</span>
                     </div>
 
-                    <p className="mt-3 text-[15px] leading-[1.7] text-[#1C1917]">
+                    <p className="mt-2.5 text-[14px] leading-[1.6] text-[#1C1917] sm:mt-3 sm:text-[15px] sm:leading-[1.7]">
                       {vent.content}
                     </p>
 
-                    <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-[#F4E9BF] pt-4 sm:gap-5">
+                    <div className="mt-3.5 flex flex-wrap items-center gap-3 border-t border-[#F4E9BF] pt-3 sm:mt-5 sm:gap-5 sm:pt-4">
                       <button
                         type="button"
                         onClick={() => handleEmbrace(vent.id)}

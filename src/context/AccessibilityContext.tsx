@@ -210,6 +210,39 @@ export function AccessibilityProvider({
     };
   }, [speechOutputSupported]);
 
+  const SILENT_WAV_URI =
+    'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+
+  const getOrCreatePlayer = useCallback(() => {
+    if (!audioRef.current) {
+      const el = new Audio();
+      el.preload = 'auto';
+      audioRef.current = el;
+    }
+    return audioRef.current;
+  }, []);
+
+  const unlockMobileAudio = useCallback(() => {
+    try {
+      const player = getOrCreatePlayer();
+      player.muted = true;
+      player.src = SILENT_WAV_URI;
+      const p = player.play();
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          player.pause();
+          player.muted = false;
+        }).catch(() => {
+          player.muted = false;
+        });
+      } else {
+        player.muted = false;
+      }
+    } catch {
+      // Ignore unlock issues
+    }
+  }, [getOrCreatePlayer]);
+
   const stopActiveAudio = useCallback(() => {
     speechSeqRef.current += 1;
     if (ttsAbortRef.current) {
@@ -225,7 +258,6 @@ export function AccessibilityProvider({
       } catch {
         // Ignore audio stop errors
       }
-      audioRef.current = null;
     }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
@@ -298,22 +330,19 @@ export function AccessibilityProvider({
           return;
         }
         try {
-          const audio = new Audio(url);
-          audioRef.current = audio;
+          const audio = getOrCreatePlayer();
+          audio.muted = false;
+          audio.pause();
+          audio.src = url;
+          audio.currentTime = 0;
 
           audio.onended = () => {
-            if (audioRef.current === audio) {
-              audioRef.current = null;
-            }
             if (seq === speechSeqRef.current) {
               setSpeakingId(null);
             }
           };
 
           audio.onerror = () => {
-            if (audioRef.current === audio) {
-              audioRef.current = null;
-            }
             resolve(false);
           };
 
@@ -330,7 +359,7 @@ export function AccessibilityProvider({
         }
       });
     },
-    [],
+    [getOrCreatePlayer],
   );
 
   const speak = useCallback(
@@ -355,6 +384,8 @@ export function AccessibilityProvider({
         });
         return;
       }
+
+      unlockMobileAudio();
 
       const controller = new AbortController();
       ttsAbortRef.current = controller;
@@ -405,7 +436,7 @@ export function AccessibilityProvider({
         }
       })();
     },
-    [playAudioUrl, speakWithBrowserFallback, stopActiveAudio],
+    [playAudioUrl, speakWithBrowserFallback, stopActiveAudio, unlockMobileAudio],
   );
 
   const executeVoiceCommand = useCallback(

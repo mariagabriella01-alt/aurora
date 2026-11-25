@@ -115,33 +115,33 @@ export function AssistantSection() {
   };
 
   return (
-    <section id="assistente" className="border-b border-[#EADCA6] bg-[#FEF9E6] py-12 sm:py-16 lg:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
+    <section id="assistente" className="border-b border-[#EADCA6] bg-[#FEF9E6] py-8 sm:py-16 lg:py-20">
+      <div className="mx-auto max-w-6xl px-3.5 sm:px-6">
+        <div className="grid grid-cols-1 gap-5 sm:gap-8 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-5">
-            <p className="text-xs font-medium tracking-widest uppercase text-[#13382C]">
+            <p className="text-[11px] font-medium tracking-widest uppercase text-[#13382C] sm:text-xs">
               Conversa de apoio por voz ou texto
             </p>
-            <h2 className="font-editorial mt-2 text-3xl font-medium text-[#1C1917] sm:text-4xl text-balance">
+            <h2 className="font-editorial mt-1.5 text-2xl font-medium text-[#1C1917] sm:mt-2 sm:text-4xl text-balance">
               Converse agora com a nossa assistente de acolhimento
             </h2>
-            <p className="mt-3 text-base leading-relaxed text-[#57534E]">
+            <p className="mt-2.5 text-[14.5px] leading-relaxed text-[#57534E] sm:mt-3 sm:text-base">
               Se preferir não escrever, toque em <strong>Falar por voz</strong> e conte o que está
               sentindo. A resposta também pode ser ouvida em voz alta e acompanhada em texto.
             </p>
 
-            <div className="mt-6">
+            <div className="mt-4 sm:mt-6">
               <p className="text-xs font-semibold text-[#44403C]">
                 Sugestões para começar a conversar:
               </p>
-              <div className="mt-2.5 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-1.5 sm:mt-2.5 sm:gap-2">
                 {QUICK_PROMPTS.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"
                     disabled={loading}
                     onClick={() => void sendMessage(prompt)}
-                    className="min-h-[40px] rounded-lg border border-[#DFCE91] bg-[#FFFDF4] px-3 py-2 text-left text-xs font-medium text-[#1C1917] transition-colors hover:border-[#13382C] hover:bg-[#FAF0CA] disabled:opacity-50 cursor-pointer"
+                    className="min-h-[36px] rounded-lg border border-[#DFCE91] bg-[#FFFDF4] px-2.5 py-1.5 text-left text-[11px] font-medium text-[#1C1917] transition-all duration-150 hover:border-[#13382C] hover:bg-[#FAF0CA] active:scale-[0.98] disabled:opacity-50 cursor-pointer sm:min-h-[40px] sm:px-3 sm:py-2 sm:text-xs"
                   >
                     {prompt}
                   </button>
@@ -149,7 +149,7 @@ export function AssistantSection() {
               </div>
             </div>
 
-            <p className="mt-6 text-xs leading-relaxed text-[#78716C]">
+            <p className="mt-4 text-[11px] leading-relaxed text-[#78716C] sm:mt-6 sm:text-xs">
               A assistente oferece escuta acolhedora e orientações gerais, mas não substitui
               psicólogos ou atendimento médico. Em emergência, ligue 188 (CVV).
             </p>
@@ -157,11 +157,11 @@ export function AssistantSection() {
 
           <div className="lg:col-span-7">
             <div className="flex flex-col rounded-xl border border-[#EADCA6] bg-[#FFFDF4]">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EADCA6] px-4 py-3.5 sm:px-5 sm:py-4">
-                <div className="flex items-center gap-2.5">
-                  <MessageCircleHeart className="h-5 w-5 text-[#13382C]" aria-hidden="true" />
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EADCA6] px-3.5 py-3 sm:px-5 sm:py-4">
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <MessageCircleHeart className="h-4.5 w-4.5 text-[#13382C] sm:h-5 sm:w-5" aria-hidden="true" />
                   <div>
-                    <p className="text-sm font-semibold text-[#1C1917]">
+                    <p className="text-[13px] font-semibold text-[#1C1917] sm:text-sm">
                       Clara · Assistente de Acolhimento
                     </p>
                   </div>
@@ -170,14 +170,14 @@ export function AssistantSection() {
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-[#DFCE91] bg-white px-3 py-1.5 text-xs font-medium text-[#44403C] hover:bg-[#FAF0CA] cursor-pointer"
+                  className="inline-flex min-h-[34px] items-center gap-1.5 rounded-lg border border-[#DFCE91] bg-white px-2.5 py-1 text-[11px] font-medium text-[#44403C] hover:bg-[#FAF0CA] cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-1.5 sm:text-xs"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                  <RotateCcw className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
                   <span>Nova conversa</span>
                 </button>
               </div>
 
-              <div ref={scrollRef} className="max-h-[400px] min-h-[260px] space-y-4 overflow-y-auto p-4 sm:p-5">
+              <div ref={scrollRef} className="max-h-[320px] min-h-[200px] space-y-3 overflow-y-auto p-3.5 sm:max-h-[400px] sm:min-h-[260px] sm:space-y-4 sm:p-5">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
@@ -186,7 +186,7 @@ export function AssistantSection() {
                     }`}
                   >
                     <div
-                      className={`max-w-[90%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-line sm:max-w-[85%] ${
+                      className={`max-w-[92%] rounded-xl px-3.5 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-line sm:max-w-[85%] sm:px-4 sm:py-3 sm:text-sm ${
                         msg.role === 'user'
                           ? 'bg-[#13382C] text-[#FEF9E6]'
                           : 'border border-[#EADCA6] bg-[#FDF6DC] text-[#1C1917]'
@@ -204,7 +204,7 @@ export function AssistantSection() {
 
                 {loading && (
                   <div className="flex justify-start">
-                    <div className="rounded-xl border border-[#EADCA6] bg-[#FDF6DC] px-4 py-3 text-xs text-[#57534E]">
+                    <div className="rounded-xl border border-[#EADCA6] bg-[#FDF6DC] px-3.5 py-2.5 text-xs text-[#57534E] sm:px-4 sm:py-3">
                       Ouvindo você com atenção...
                     </div>
                   </div>
@@ -214,21 +214,21 @@ export function AssistantSection() {
               {voiceStatus && (
                 <div
                   aria-live="polite"
-                  className="mx-4 mb-2 rounded-lg border border-[#13382C]/25 bg-[#13382C]/5 px-3.5 py-2 text-xs text-[#13382C] sm:mx-5"
+                  className="mx-3.5 mb-2 rounded-lg border border-[#13382C]/25 bg-[#13382C]/5 px-3 py-2 text-xs text-[#13382C] sm:mx-5 sm:px-3.5"
                 >
                   {voiceStatus}
                 </div>
               )}
 
               {error && (
-                <div className="mx-4 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-300 bg-red-50 px-3.5 py-2.5 text-xs text-red-800 sm:mx-5">
+                <div className="mx-3.5 mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800 sm:mx-5 sm:mb-3 sm:px-3.5 sm:py-2.5">
                   <span>{error}</span>
                   {messages[messages.length - 1]?.role === 'user' && (
                     <button
                       type="button"
                       disabled={loading}
                       onClick={handleRetry}
-                      className="min-h-[36px] rounded-md border border-red-300 bg-white px-2.5 py-1 font-semibold text-red-800 hover:bg-red-100 disabled:opacity-50 cursor-pointer"
+                      className="min-h-[34px] rounded-md border border-red-300 bg-white px-2.5 py-1 font-semibold text-red-800 hover:bg-red-100 disabled:opacity-50 cursor-pointer sm:min-h-[36px]"
                     >
                       Tentar novamente
                     </button>
@@ -238,7 +238,7 @@ export function AssistantSection() {
 
               <form
                 onSubmit={handleSubmit}
-                className="flex flex-col gap-2.5 border-t border-[#EADCA6] p-3.5 sm:flex-row sm:items-end sm:p-4"
+                className="flex flex-col gap-2 border-t border-[#EADCA6] p-3 sm:flex-row sm:items-end sm:gap-2.5 sm:p-4"
               >
                 <label htmlFor="assistant-input" className="sr-only">
                   Escreva ou fale sua mensagem para a assistente
@@ -256,7 +256,7 @@ export function AssistantSection() {
                     }
                   }}
                   placeholder="Escreva ou toque em Falar por voz..."
-                  className="w-full resize-none rounded-lg border border-[#DFCE91] bg-white px-3.5 py-2.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:flex-1 sm:text-sm"
+                  className="w-full resize-none rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:flex-1 sm:px-3.5 sm:py-2.5 sm:text-sm"
                 />
                 <div className="flex items-center justify-end gap-2 shrink-0">
                   <VoiceDictationButton
@@ -269,7 +269,7 @@ export function AssistantSection() {
                   <button
                     type="submit"
                     disabled={loading || input.trim().length === 0}
-                    className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg bg-[#13382C] px-4 py-2.5 text-xs font-semibold text-[#FEF9E6] transition-colors hover:bg-[#0D281F] disabled:opacity-50 whitespace-nowrap shrink-0 cursor-pointer sm:flex-initial"
+                    className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-2 rounded-lg bg-[#13382C] px-4 py-2 text-xs font-semibold text-[#FEF9E6] transition-all duration-150 hover:bg-[#0D281F] active:scale-[0.98] disabled:opacity-50 whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[44px] sm:flex-initial sm:py-2.5"
                   >
                     <Send className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>Enviar</span>

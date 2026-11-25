@@ -96,7 +96,7 @@ export function VoiceDictationButton({
       type="button"
       onClick={handleToggle}
       aria-pressed={listening}
-      className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[38px] sm:px-3 ${
+      className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-2 sm:text-xs ${
         listening
           ? 'border-red-600 bg-red-600 text-white'
           : 'border-[#DFCE91] bg-[#FFFDF4] text-[#1C1917] hover:border-[#13382C] hover:text-[#13382C]'

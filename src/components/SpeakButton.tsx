@@ -22,7 +22,7 @@ export function SpeakButton({
       type="button"
       onClick={() => (isSpeaking ? stopSpeaking() : speak(text, id))}
       aria-pressed={isSpeaking}
-      className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[32px] sm:px-2.5 sm:py-1 ${
+      className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[32px] sm:px-2.5 sm:py-1 sm:text-xs ${
         isSpeaking
           ? 'border-[#13382C] bg-[#13382C] text-[#FEF9E6]'
           : 'border-[#DFCE91] bg-[#FFFDF4] text-[#44403C] hover:border-[#13382C] hover:text-[#13382C]'

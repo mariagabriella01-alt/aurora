@@ -699,6 +699,16 @@ async function startServer() {
     },
   });
 
+  function prepareNaturalSpeechText(raw: string): string {
+    return raw
+      .replace(/\s*·\s*/g, ', ')
+      .replace(/\s*—\s*/g, '... ')
+      .replace(/\s+-\s+/g, ', ')
+      .replace(/:\s*/g, ': ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   app.post('/api/tts', async (req, res) => {
     if (isRateLimited(`tts:${getClientIp(req)}`, 30, 60_000)) {
       res.status(429).json({
@@ -714,11 +724,13 @@ async function startServer() {
       return;
     }
 
-    const text = sanitizeText(req.body?.text, 2200);
-    if (!text) {
+    const rawText = sanitizeText(req.body?.text, 2200);
+    if (!rawText) {
       res.status(400).json({ error: 'Texto vazio para leitura em voz.' });
       return;
     }
+
+    const text = prepareNaturalSpeechText(rawText);
 
     const cached = ttsCache.get(text);
     if (cached) {
@@ -730,16 +742,21 @@ async function startServer() {
       return;
     }
 
-    const ttsModels = ['gemini-3.8-flash-lite-tts', 'gemini-3.8-flash-tts'] as const;
+    const ttsAttempts: Array<{ model: string; voice: string }> = [
+      { model: 'gemini-3.8-flash-tts', voice: 'Zephyr' },
+      { model: 'gemini-3.8-flash-lite-tts', voice: 'Zephyr' },
+      { model: 'gemini-3.8-flash-lite-tts', voice: 'Kore' },
+    ];
+
     const voiceStyle =
-      'Warm, soft, empathetic Brazilian Portuguese female voice speaking like a real woman in a calm, comforting conversation: natural human pacing, gentle pauses between sentences, clear expressive pronunciation, subtle genuine warmth without exaggeration.';
+      'Speak in warm, authentic, empathetic Brazilian Portuguese as a caring woman having an intimate, calm conversation. Use natural human cadence with gentle breathing pauses at commas and periods, soft expressive melody, subtle genuine emotion, clear unhurried articulation, and an inviting timbre — never robotic or theatrical.';
 
     let lastErr: unknown = null;
-    for (const modelName of ttsModels) {
+    for (const attempt of ttsAttempts) {
       for (const withStyle of [true, false]) {
         try {
           const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), 15_000),
+            setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), 14_000),
           );
           const part = withStyle
             ? { text, speechMetadata: { style: voiceStyle } }
@@ -747,7 +764,7 @@ async function startServer() {
 
           const response = await Promise.race([
             aiTts.models.generateContent({
-              model: modelName,
+              model: attempt.model,
               contents: [
                 {
                   role: 'user',
@@ -758,7 +775,7 @@ async function startServer() {
                 responseModalities: ['AUDIO'],
                 speechConfig: {
                   voiceConfig: {
-                    prebuiltVoiceConfig: { voiceName: 'Kore' },
+                    prebuiltVoiceConfig: { voiceName: attempt.voice },
                   },
                 },
               },

@@ -242,16 +242,16 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
   const completedCount = Object.values(completedSteps).filter(Boolean).length;
 
   return (
-    <section id="saude-mental" className="border-b border-[#EADCA6] bg-[#FDF6DC] py-12 sm:py-16 lg:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section id="saude-mental" className="border-b border-[#EADCA6] bg-[#FDF6DC] py-8 sm:py-16 lg:py-20">
+      <div className="mx-auto max-w-6xl px-3.5 sm:px-6">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium tracking-widest uppercase text-[#57534E]">
+          <p className="text-[11px] font-medium tracking-widest uppercase text-[#57534E] sm:text-xs">
             02 · Cuidado com a saúde mental e o vazio
           </p>
-          <h2 className="font-editorial mt-2 text-3xl font-medium text-[#1C1917] sm:text-4xl text-balance">
+          <h2 className="font-editorial mt-1.5 text-2xl font-medium text-[#1C1917] sm:mt-2 sm:text-4xl text-balance">
             Ferramentas de psicologia para atravessar momentos de vazio e sobrecarga
           </h2>
-          <p className="mt-3 text-base leading-relaxed text-[#57534E]">
+          <p className="mt-2.5 text-[14.5px] leading-relaxed text-[#57534E] sm:mt-3 sm:text-base">
             O vazio emocional não significa que você quebrou por dentro; muitas vezes é o sistema
             nervoso exausto pedindo pausa. Escolha um tema para conversar e refletir ou use os
             exercícios práticos abaixo no seu ritmo.
@@ -259,25 +259,25 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
         </div>
 
         {/* Temas para conversar e se acolher */}
-        <div className="mt-8 rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 sm:mt-10 sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#EADCA6] pb-5">
+        <div className="mt-5 rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:mt-10 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EADCA6] pb-4 sm:gap-4 sm:pb-5">
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#13382C]">
-                <MessageSquareHeart className="h-4 w-4" aria-hidden="true" />
+              <div className="flex items-center gap-2 text-[11px] font-semibold text-[#13382C] sm:text-xs">
+                <MessageSquareHeart className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                 <span>Sobre o que você precisa conversar hoje?</span>
               </div>
-              <h3 className="font-editorial mt-1.5 text-2xl font-medium text-[#1C1917] sm:text-3xl">
+              <h3 className="font-editorial mt-1 text-xl font-medium text-[#1C1917] sm:mt-1.5 sm:text-3xl">
                 Guias para colocar em palavras o que está pesando
               </h3>
             </div>
 
-            <div className="flex flex-wrap gap-1.5 rounded-lg bg-[#FAF0CA] p-1">
+            <div className="flex flex-wrap gap-1 rounded-lg bg-[#FAF0CA] p-1 sm:gap-1.5">
               {CONVERSATION_TOPICS.map((topic) => (
                 <button
                   key={topic.id}
                   type="button"
                   onClick={() => setActiveTopicId(topic.id)}
-                  className={`min-h-[38px] rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  className={`min-h-[34px] rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[38px] sm:px-3.5 sm:py-1.5 sm:text-xs ${
                     activeTopicId === topic.id
                       ? 'bg-white text-[#1C1917] shadow-xs'
                       : 'text-[#57534E] hover:text-[#1C1917]'
@@ -289,25 +289,25 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-12">
+          <div className="mt-5 grid grid-cols-1 gap-5 sm:mt-6 sm:gap-8 lg:grid-cols-12">
             <div className="flex flex-col justify-between lg:col-span-6">
               <div>
-                <h4 className="font-editorial text-2xl font-medium text-[#1C1917]">
+                <h4 className="font-editorial text-xl font-medium text-[#1C1917] sm:text-2xl">
                   {activeTopic.headline}
                 </h4>
-                <p className="mt-3 text-sm leading-relaxed text-[#44403C]">
+                <p className="mt-2 text-[13.5px] leading-relaxed text-[#44403C] sm:mt-3 sm:text-sm">
                   {activeTopic.validation}
                 </p>
-                <p className="mt-4 rounded-lg bg-[#FAF0CA] px-4 py-3 text-xs leading-relaxed text-[#13382C] font-medium">
+                <p className="mt-3 rounded-lg bg-[#FAF0CA] px-3.5 py-2.5 text-xs leading-relaxed text-[#13382C] font-medium sm:mt-4 sm:px-4 sm:py-3">
                   {activeTopic.gentleStep}
                 </p>
               </div>
 
-              <div className="mt-6">
+              <div className="mt-4 sm:mt-6">
                 <button
                   type="button"
                   onClick={() => onVentAboutTopic(activeTopic.ventCategory)}
-                  className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-[#13382C] px-4 py-2.5 text-xs font-semibold text-[#FEF9E6] transition-colors hover:bg-[#0D281F] whitespace-nowrap cursor-pointer"
+                  className="inline-flex min-h-[40px] w-full items-center justify-center gap-2 rounded-lg bg-[#13382C] px-4 py-2 text-xs font-semibold text-[#FEF9E6] transition-all duration-150 hover:bg-[#0D281F] active:scale-[0.98] whitespace-nowrap cursor-pointer sm:min-h-[44px] sm:w-auto sm:py-2.5"
                 >
                   <span>Desabafar sobre {activeTopic.label.toLowerCase()}</span>
                   <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -319,16 +319,16 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
               <p className="text-xs font-semibold text-[#57534E]">
                 Perguntas para conversar consigo mesmo(a) — clique para responder no seu diário privado:
               </p>
-              <div className="mt-3 space-y-2.5">
+              <div className="mt-2.5 space-y-2 sm:mt-3 sm:space-y-2.5">
                 {activeTopic.questions.map((question) => (
                   <button
                     key={question}
                     type="button"
                     onClick={() => handleUsePromptInJournal(question)}
-                    className="flex min-h-[48px] w-full items-center justify-between gap-3 rounded-lg border border-[#EADCA6] bg-[#FEF9E6] px-4 py-3 text-left text-sm text-[#1C1917] transition-colors hover:border-[#13382C]/40 hover:bg-[#FAF0CA] cursor-pointer"
+                    className="flex min-h-[44px] w-full items-center justify-between gap-2.5 rounded-lg border border-[#EADCA6] bg-[#FEF9E6] px-3 py-2.5 text-left text-[13px] text-[#1C1917] transition-colors hover:border-[#13382C]/40 hover:bg-[#FAF0CA] cursor-pointer sm:min-h-[48px] sm:gap-3 sm:px-4 sm:py-3 sm:text-sm"
                   >
                     <span>{question}</span>
-                    <span className="shrink-0 text-xs font-semibold text-[#13382C] whitespace-nowrap">
+                    <span className="shrink-0 text-[11px] font-semibold text-[#13382C] whitespace-nowrap sm:text-xs">
                       Responder
                     </span>
                   </button>
@@ -338,31 +338,31 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
           </div>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="mt-5 grid grid-cols-1 gap-5 sm:mt-8 sm:gap-8 lg:grid-cols-12">
           {/* Respiração 4-7-8 */}
-          <div className="flex flex-col justify-between rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 sm:p-6 lg:col-span-5">
+          <div className="flex flex-col justify-between rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-6 lg:col-span-5">
             <div>
-              <div className="flex items-center justify-between gap-4">
-                <h3 className="font-editorial text-2xl font-medium text-[#1C1917]">
+              <div className="flex items-center justify-between gap-3 sm:gap-4">
+                <h3 className="font-editorial text-xl font-medium text-[#1C1917] sm:text-2xl">
                   Respiração guiada 4-7-8
                 </h3>
                 <span className="text-xs text-[#57534E] tabular-nums">
                   {cycles} {cycles === 1 ? 'ciclo' : 'ciclos'}
                 </span>
               </div>
-              <p className="mt-2 text-sm text-[#57534E]">
+              <p className="mt-1.5 text-[13px] text-[#57534E] sm:mt-2 sm:text-sm">
                 Ajuda a reduzir batimentos acelerados, crises de ansiedade e sensação de aperto no peito.
               </p>
 
-              <div className="my-8 flex flex-col items-center justify-center py-4">
+              <div className="my-5 flex flex-col items-center justify-center py-2 sm:my-8 sm:py-4">
                 <div
-                  className={`flex h-44 w-44 items-center justify-center rounded-full border border-[#13382C]/35 bg-[#13382C]/10 transition-transform duration-1000 ease-out ${circleScale}`}
+                  className={`flex h-36 w-36 items-center justify-center rounded-full border border-[#13382C]/35 bg-[#13382C]/10 transition-transform duration-1000 ease-out sm:h-44 sm:w-44 ${circleScale}`}
                 >
-                  <div className="flex h-32 w-32 flex-col items-center justify-center rounded-full bg-[#13382C] text-[#FEF9E6]">
-                    <span className="font-editorial text-4xl font-semibold tabular-nums">
+                  <div className="flex h-26 w-26 flex-col items-center justify-center rounded-full bg-[#13382C] text-[#FEF9E6] sm:h-32 sm:w-32">
+                    <span className="font-editorial text-3xl font-semibold tabular-nums sm:text-4xl">
                       {secondsLeft}s
                     </span>
-                    <span className="mt-1 text-[11px] font-medium opacity-90">
+                    <span className="mt-0.5 text-[11px] font-medium opacity-90 sm:mt-1">
                       {phase === 'inhale'
                         ? 'Inspirar'
                         : phase === 'hold'
@@ -372,29 +372,29 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
                   </div>
                 </div>
 
-                <p className="mt-6 text-center text-sm font-semibold text-[#1C1917]">
+                <p className="mt-4 text-center text-[13px] font-semibold text-[#1C1917] sm:mt-6 sm:text-sm">
                   {PHASE_CONFIG[phase].label}
                 </p>
-                <p className="mt-1 text-center text-xs text-[#57534E]">
+                <p className="mt-0.5 text-center text-xs text-[#57534E] sm:mt-1">
                   {PHASE_CONFIG[phase].hint}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 border-t border-[#EADCA6] pt-4">
+            <div className="flex items-center gap-2.5 border-t border-[#EADCA6] pt-3.5 sm:gap-3 sm:pt-4">
               <button
                 type="button"
                 onClick={() => setBreathingActive((prev) => !prev)}
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg bg-[#13382C] px-4 py-2.5 text-xs font-semibold text-[#FEF9E6] transition-colors hover:bg-[#0D281F] cursor-pointer"
+                className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-2 rounded-lg bg-[#13382C] px-3.5 py-2 text-xs font-semibold text-[#FEF9E6] transition-all duration-150 hover:bg-[#0D281F] active:scale-[0.98] cursor-pointer sm:min-h-[44px] sm:px-4 sm:py-2.5"
               >
                 {breathingActive ? (
                   <>
-                    <Pause className="h-4 w-4" aria-hidden="true" />
+                    <Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                     <span>Pausar</span>
                   </>
                 ) : (
                   <>
-                    <Play className="h-4 w-4" aria-hidden="true" />
+                    <Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                     <span>Iniciar respiração</span>
                   </>
                 )}
@@ -402,7 +402,7 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
               <button
                 type="button"
                 onClick={resetBreathing}
-                className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-[#DFCE91] bg-white px-4 py-2.5 text-xs font-semibold text-[#1C1917] transition-colors hover:bg-[#FAF0CA] cursor-pointer"
+                className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-lg border border-[#DFCE91] bg-white px-3.5 py-2 text-xs font-semibold text-[#1C1917] transition-colors hover:bg-[#FAF0CA] cursor-pointer sm:min-h-[44px] sm:px-4 sm:py-2.5"
               >
                 <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Reiniciar</span>
@@ -411,13 +411,13 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
           </div>
 
           {/* Aterramento 5-4-3-2-1 */}
-          <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 sm:p-6 lg:col-span-7">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#EADCA6] pb-4">
+          <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-6 lg:col-span-7">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EADCA6] pb-3.5 sm:gap-4 sm:pb-4">
               <div>
-                <h3 className="font-editorial text-2xl font-medium text-[#1C1917]">
+                <h3 className="font-editorial text-xl font-medium text-[#1C1917] sm:text-2xl">
                   Aterramento 5-4-3-2-1 para o vazio
                 </h3>
-                <p className="mt-1 text-sm text-[#57534E]">
+                <p className="mt-1 text-[13px] text-[#57534E] sm:text-sm">
                   Quando a mente parecer distante ou desconectada da realidade, marque cada passo com calma.
                 </p>
               </div>
@@ -471,16 +471,16 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
         </div>
 
         {/* Psychoeducation & Private Journal */}
-        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12">
-          <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 sm:p-6 lg:col-span-5">
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#13382C]">
-              <BookOpen className="h-4 w-4" aria-hidden="true" />
+        <div className="mt-5 grid grid-cols-1 gap-5 sm:mt-8 sm:gap-8 lg:grid-cols-12">
+          <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-6 lg:col-span-5">
+            <div className="flex items-center gap-2 text-[11px] font-semibold text-[#13382C] sm:text-xs">
+              <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
               <span>Entendendo o vazio</span>
             </div>
-            <h3 className="font-editorial mt-2 text-2xl font-medium text-[#1C1917]">
+            <h3 className="font-editorial mt-1.5 text-xl font-medium text-[#1C1917] sm:mt-2 sm:text-2xl">
               Por que às vezes não sentimos nada, nem tristeza nem alegria?
             </h3>
-            <div className="mt-4 space-y-3 text-sm leading-relaxed text-[#44403C]">
+            <div className="mt-3 space-y-2.5 text-[13.5px] leading-relaxed text-[#44403C] sm:mt-4 sm:space-y-3 sm:text-sm">
               <p>
                 Na psicologia, a sensação de <strong>vazio interior</strong> costuma surgir quando
                 suportamos estresse, solidão ou dor emocional por tempo demais. Para se proteger,
@@ -498,13 +498,13 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 sm:p-6 lg:col-span-7">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EADCA6] pb-4">
+          <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-4 sm:p-6 lg:col-span-7">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EADCA6] pb-3.5 sm:pb-4">
               <div>
-                <h3 className="font-editorial text-2xl font-medium text-[#1C1917]">
+                <h3 className="font-editorial text-xl font-medium text-[#1C1917] sm:text-2xl">
                   Meu diário privado da mente
                 </h3>
-                <p className="mt-1 text-xs text-[#57534E]">
+                <p className="mt-0.5 text-xs text-[#57534E] sm:mt-1">
                   Fica salvo apenas neste navegador para você acompanhar seus sentimentos com honestidade.
                 </p>
               </div>
@@ -513,18 +513,18 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
               </span>
             </div>
 
-            <form onSubmit={handleSaveJournal} className="mt-4 space-y-4">
+            <form onSubmit={handleSaveJournal} className="mt-3.5 space-y-3 sm:mt-4 sm:space-y-4">
               <div>
                 <span className="block text-xs font-semibold text-[#44403C]">
                   Como está o seu coração agora?
                 </span>
-                <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="mt-1.5 flex flex-wrap gap-1.5 sm:mt-2">
                   {MOODS.map((mood) => (
                     <button
                       key={mood}
                       type="button"
                       onClick={() => setSelectedMood(mood)}
-                      className={`min-h-[38px] rounded-md border px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                      className={`min-h-[34px] rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors whitespace-nowrap cursor-pointer sm:min-h-[38px] sm:px-3 sm:py-1.5 sm:text-xs ${
                         selectedMood === mood
                           ? 'border-[#13382C] bg-[#13382C] text-[#FEF9E6]'
                           : 'border-[#DFCE91] bg-white text-[#44403C] hover:bg-[#FAF0CA]'
@@ -547,7 +547,7 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
                   value={journalNote}
                   onChange={(e) => setJournalNote(e.target.value)}
                   placeholder="O que despertou esse sentimento hoje? Do que você precisa agora?"
-                  className="w-full rounded-lg border border-[#DFCE91] bg-white px-3.5 py-2.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:text-sm"
+                  className="w-full rounded-lg border border-[#DFCE91] bg-white px-3 py-2 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:px-3.5 sm:py-2.5 sm:text-sm"
                 />
               </div>
 
@@ -555,7 +555,7 @@ export function MentalHealthSection({ onVentAboutTopic }: MentalHealthSectionPro
                 <button
                   type="submit"
                   disabled={journalNote.trim().length < 4}
-                  className="min-h-[42px] w-full rounded-lg bg-[#13382C] px-4 py-2 text-xs font-semibold text-[#FEF9E6] transition-colors hover:bg-[#0D281F] disabled:opacity-50 cursor-pointer sm:w-auto"
+                  className="min-h-[40px] w-full rounded-lg bg-[#13382C] px-4 py-2 text-xs font-semibold text-[#FEF9E6] transition-all duration-150 hover:bg-[#0D281F] active:scale-[0.98] disabled:opacity-50 cursor-pointer sm:min-h-[42px] sm:w-auto"
                 >
                   Salvar anotação privada
                 </button>

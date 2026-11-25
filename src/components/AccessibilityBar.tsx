@@ -80,14 +80,14 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
       aria-label="Acessibilidade por voz, áudio, ícones e Libras"
       className="border-b border-[#EADCA6] bg-[#FAF0CA]"
     >
-      <div className="mx-auto max-w-6xl px-4 py-3.5 sm:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+      <div className="mx-auto max-w-6xl px-3.5 py-2.5 sm:px-6 sm:py-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => (listeningCommand ? stopVoiceCommand() : startVoiceCommand())}
               aria-pressed={listeningCommand}
-              className={`inline-flex min-h-[42px] items-center gap-2 rounded-lg border px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[42px] sm:gap-2 sm:px-3.5 sm:py-2 sm:text-xs ${
                 listeningCommand
                   ? 'border-red-600 bg-red-600 text-white'
                   : 'border-[#13382C] bg-[#13382C] text-[#FEF9E6] hover:bg-[#0D281F]'
@@ -118,7 +118,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
                   );
                 }
               }}
-              className="inline-flex min-h-[42px] items-center gap-1.5 rounded-lg border border-[#DFCE91] bg-[#FFFDF4] px-3.5 py-2 text-xs font-semibold text-[#1C1917] transition-colors hover:border-[#13382C] whitespace-nowrap shrink-0 cursor-pointer"
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-[#DFCE91] bg-[#FFFDF4] px-2.5 py-1.5 text-[11px] font-semibold text-[#1C1917] transition-all duration-150 hover:border-[#13382C] active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[42px] sm:px-3.5 sm:py-2 sm:text-xs"
             >
               {speakingId === 'page-guide' ? (
                 <>
@@ -137,7 +137,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
               type="button"
               onClick={() => setAutoReadAssistant(!autoReadAssistant)}
               aria-pressed={autoReadAssistant}
-              className={`inline-flex min-h-[42px] items-center gap-1.5 rounded-lg border px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[42px] sm:px-3.5 sm:py-2 sm:text-xs ${
                 autoReadAssistant
                   ? 'border-[#13382C]/40 bg-[#13382C]/10 text-[#13382C]'
                   : 'border-[#DFCE91] bg-[#FFFDF4] text-[#57534E]'
@@ -151,7 +151,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
               type="button"
               onClick={() => setEasyVisualMode(!easyVisualMode)}
               aria-pressed={easyVisualMode}
-              className={`inline-flex min-h-[42px] items-center gap-1.5 rounded-lg border px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[42px] sm:px-3.5 sm:py-2 sm:text-xs ${
                 easyVisualMode
                   ? 'border-[#5C3A21] bg-[#5C3A21] text-[#FEF9E6]'
                   : 'border-[#DFCE91] bg-[#FFFDF4] text-[#1C1917] hover:border-[#5C3A21]'
@@ -162,7 +162,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
             </button>
           </div>
 
-          <p className="text-xs text-[#57534E]">
+          <p className="text-[11px] leading-snug text-[#57534E] sm:text-xs">
             Para surdos: legendas visuais ativas e tradutor em Libras no canto da tela.
           </p>
         </div>
@@ -170,7 +170,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
         {(commandFeedback || lastCommandHeard || spokenCaption) && (
           <div
             aria-live="polite"
-            className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#EADCA6] bg-[#FFFDF4] px-3.5 py-2 text-xs text-[#1C1917]"
+            className="animate-fade-soft mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#EADCA6] bg-[#FFFDF4] px-3 py-2 text-[11px] text-[#1C1917] sm:mt-3 sm:px-3.5 sm:text-xs"
           >
             <div>
               {commandFeedback && <span className="font-medium text-[#13382C]">{commandFeedback}</span>}
@@ -195,16 +195,16 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
         )}
 
         {easyVisualMode && (
-          <div className="mt-4 rounded-xl border border-[#DFCE91] bg-[#FFFDF4] p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#EADCA6]">
-              <p className="text-sm font-semibold text-[#1C1917]">
+          <div className="animate-fade-soft mt-3 rounded-xl border border-[#DFCE91] bg-[#FFFDF4] p-3.5 sm:mt-4 sm:p-4">
+            <div className="flex flex-wrap items-center justify-between gap-1.5 pb-2.5 border-b border-[#EADCA6] sm:gap-2 sm:pb-3">
+              <p className="text-xs font-semibold text-[#1C1917] sm:text-sm">
                 Toque em um ícone para ir direto — ou fale pelo microfone
               </p>
-              <p className="text-xs text-[#57534E]">
+              <p className="text-[11px] text-[#57534E] sm:text-xs">
                 Cada botão possui ícone visual claro e leitura em voz alta.
               </p>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="mt-2.5 grid grid-cols-3 gap-2 sm:mt-3 sm:grid-cols-3 sm:gap-3 lg:grid-cols-6">
               {visualTiles.map((tile) => {
                 const Icon = tile.icon;
                 return (
@@ -215,10 +215,10 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
                       speak(tile.spoken, `tile-${tile.label}`);
                       tile.action();
                     }}
-                    className="flex min-h-[88px] flex-col items-center justify-center gap-2 rounded-xl border border-[#EADCA6] bg-[#FEF9E6] px-3 py-4 text-center transition-colors hover:border-[#13382C] hover:bg-[#13382C]/5 cursor-pointer"
+                    className="flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl border border-[#EADCA6] bg-[#FEF9E6] px-2 py-3 text-center transition-all duration-150 hover:border-[#13382C] hover:bg-[#13382C]/5 active:scale-[0.97] cursor-pointer sm:min-h-[88px] sm:gap-2 sm:px-3 sm:py-4"
                   >
-                    <Icon className="h-7 w-7 text-[#13382C]" aria-hidden="true" />
-                    <span className="text-sm font-semibold text-[#1C1917]">{tile.label}</span>
+                    <Icon className="h-5 w-5 text-[#13382C] sm:h-7 sm:w-7" aria-hidden="true" />
+                    <span className="text-xs font-semibold text-[#1C1917] sm:text-sm">{tile.label}</span>
                   </button>
                 );
               })}
