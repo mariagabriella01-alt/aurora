@@ -221,6 +221,7 @@ export function AccessibilityProvider({
     if (!audioRef.current) {
       const el = new Audio();
       el.preload = 'auto';
+      el.setAttribute('playsinline', 'true');
       audioRef.current = el;
     }
     return audioRef.current;
@@ -297,7 +298,7 @@ export function AccessibilityProvider({
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'pt-BR';
-        utterance.rate = 0.88;
+        utterance.rate = 0.96;
 
         const liveVoices = window.speechSynthesis.getVoices();
         const availableVoices = liveVoices.length > 0 ? liveVoices : voicesRef.current;
@@ -307,7 +308,7 @@ export function AccessibilityProvider({
         if (femaleVoice) {
           utterance.voice = femaleVoice;
         }
-        utterance.pitch = isExplicitlyFemale ? 1.0 : 1.06;
+        utterance.pitch = isExplicitlyFemale ? 1.04 : 1.08;
 
         utterance.onstart = () => {
           if (seq !== speechSeqRef.current) return;
@@ -343,6 +344,7 @@ export function AccessibilityProvider({
         try {
           const audio = getOrCreatePlayer();
           audio.muted = false;
+          audio.playbackRate = 1.0;
           audio.pause();
           audio.src = url;
           audio.currentTime = 0;
@@ -420,7 +422,7 @@ export function AccessibilityProvider({
           }
 
           const objectUrl = URL.createObjectURL(blob);
-          if (audioCacheRef.current.size >= 25) {
+          if (audioCacheRef.current.size >= 40) {
             const oldest = audioCacheRef.current.entries().next().value as
               | [string, string]
               | undefined;

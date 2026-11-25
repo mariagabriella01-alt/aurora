@@ -826,13 +826,16 @@ async function startServer() {
 
   function prepareNaturalSpeechText(raw: string): string {
     return raw
-      .replace(/\n{2,}/g, '... ')
+      .replace(/([.!?])\s*\n+/g, '$1 ')
+      .replace(/\n{2,}/g, '. ')
       .replace(/\n/g, ', ')
       .replace(/\s*·\s*/g, ', ')
-      .replace(/\s*—\s*/g, '... ')
+      .replace(/\s*—\s*/g, ', ')
       .replace(/\s+-\s+/g, ', ')
       .replace(/:\s*/g, ': ')
       .replace(/\bCVV\b/g, 'C V V')
+      .replace(/\bUBS\b/g, 'U B S')
+      .replace(/\bCAPS AD\b/g, 'C A P S A D')
       .replace(/\s+/g, ' ')
       .trim();
   }
@@ -871,21 +874,20 @@ async function startServer() {
     }
 
     const ttsAttempts: Array<{ model: string; voice: string }> = [
-      { model: 'gemini-3.8-flash-tts', voice: 'Sulafat' },
       { model: 'gemini-3.8-flash-tts', voice: 'Zephyr' },
       { model: 'gemini-3.8-flash-lite-tts', voice: 'Zephyr' },
       { model: 'gemini-3.8-flash-lite-tts', voice: 'Kore' },
     ];
 
     const voiceStyle =
-      'Speak in calm, gentle, comforting Brazilian Portuguese (pt-BR) as Sophia, a soothing and empathetic woman talking quietly with a close friend. Keep a moderate, unhurried pace with soft, natural breathing pauses between sentences and commas. Use clear pronunciation, subtle human warmth, peaceful steadiness, and delicate emotion — never rushed, never robotic, never overly dramatic or theatrical.';
+      'Speak in natural, bright, expressive Brazilian Portuguese (pt-BR) as Sophia, an intelligent, warm, confident, and approachable woman having an authentic everyday conversation. Deliver clear pronunciation and fluid professional diction with lively yet balanced intonation, natural rising inflection on questions, genuine warmth and empathy suited to the context, and short well-placed pauses at commas and periods. Sound engaging, spontaneous, and human — never robotic, never monotone, and never like an exaggerated commercial radio or TV announcer.';
 
     let lastErr: unknown = null;
     for (const attempt of ttsAttempts) {
       for (const withStyle of [true, false]) {
         try {
           const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), 14_000),
+            setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), 12_000),
           );
           const part = withStyle
             ? { text, speechMetadata: { style: voiceStyle } }
@@ -915,7 +917,7 @@ async function startServer() {
           const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
           if (base64Audio) {
             const wavBuffer = Buffer.from(base64Audio, 'base64');
-            if (ttsCache.size >= 40) {
+            if (ttsCache.size >= 80) {
               const oldestKey = ttsCache.keys().next().value;
               if (oldestKey !== undefined) ttsCache.delete(oldestKey);
             }
