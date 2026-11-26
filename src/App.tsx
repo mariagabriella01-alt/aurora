@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AccessibilityBar } from './components/AccessibilityBar';
-import { AssistantSection } from './components/AssistantSection';
 import { CrisisSupportSection } from './components/CrisisSupportSection';
 import { Footer } from './components/Footer';
 import { GodSpaceSection } from './components/GodSpaceSection';
@@ -10,37 +9,14 @@ import { MentalHealthSection } from './components/MentalHealthSection';
 import { MinhaSuperacaoSection } from './components/MinhaSuperacaoSection';
 import { ReasonsToLiveSection } from './components/ReasonsToLiveSection';
 import { VentWallSection } from './components/VentWallSection';
-import { AccessibilityProvider, useAccessibility } from './context/AccessibilityContext';
+import { AccessibilityProvider } from './context/AccessibilityContext';
 import type {
   Prayer,
   ReasonToLive,
   SanctuaryData,
-  SophiaPromptRequest,
   Vent,
   VentCategory,
 } from './types';
-
-function GlobalVoiceAlert() {
-  const { speechError, clearSpeechError } = useAccessibility();
-  if (!speechError) return null;
-
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="fixed bottom-4 left-3 right-3 z-50 mx-auto flex max-w-md items-start justify-between gap-3 rounded-xl border border-red-300 bg-red-50 px-3.5 py-2.5 text-xs text-red-900 shadow-lg sm:left-auto sm:right-5"
-    >
-      <span className="leading-relaxed">{speechError}</span>
-      <button
-        type="button"
-        onClick={clearSpeechError}
-        className="shrink-0 font-semibold text-red-900 underline underline-offset-2 cursor-pointer"
-      >
-        Fechar
-      </button>
-    </div>
-  );
-}
 
 export default function App() {
   const [vents, setVents] = useState<Vent[]>([]);
@@ -52,7 +28,6 @@ export default function App() {
     category: VentCategory;
     trigger: number;
   } | null>(null);
-  const [sophiaPromptRequest, setSophiaPromptRequest] = useState<SophiaPromptRequest | null>(null);
 
   const loadSanctuary = useCallback(async () => {
     try {
@@ -182,15 +157,6 @@ export default function App() {
     el?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleAskSophia = useCallback((req: Omit<SophiaPromptRequest, 'trigger'>) => {
-    setSophiaPromptRequest((prev) => ({
-      ...req,
-      trigger: (prev?.trigger ?? 0) + 1,
-    }));
-    const el = document.getElementById('assistente');
-    el?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
-
   return (
     <AccessibilityProvider
       onNavigateSection={navigateToSection}
@@ -218,9 +184,7 @@ export default function App() {
 
           <MentalHealthSection onVentAboutTopic={handleVentAboutTopic} />
 
-          <MinhaSuperacaoSection onAskSophia={handleAskSophia} />
-
-          <AssistantSection externalPromptRequest={sophiaPromptRequest} />
+          <MinhaSuperacaoSection />
 
           <GodSpaceSection
             prayers={prayers}
@@ -238,7 +202,6 @@ export default function App() {
         </main>
 
         <Footer />
-        <GlobalVoiceAlert />
       </div>
     </AccessibilityProvider>
   );

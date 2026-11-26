@@ -1,10 +1,8 @@
 import {
   Award,
   Brain,
-  Ear,
   Eye,
   HeartHandshake,
-  MessageCircleHeart,
   Mic,
   MicOff,
   PhoneCall,
@@ -20,18 +18,11 @@ interface AccessibilityBarProps {
 
 export function AccessibilityBar({ onNavigateSection, onComposeVent }: AccessibilityBarProps) {
   const {
-    speakingId,
-    spokenCaption,
-    speechError,
-    clearSpeechError,
-    autoReadAssistant,
-    setAutoReadAssistant,
     easyVisualMode,
     setEasyVisualMode,
     listeningCommand,
     lastCommandHeard,
     commandFeedback,
-    stopSpeaking,
     startVoiceCommand,
     stopVoiceCommand,
   } = useAccessibility();
@@ -41,11 +32,6 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
       label: 'Desabafar',
       icon: HeartHandshake,
       action: onComposeVent,
-    },
-    {
-      label: 'Sophia',
-      icon: MessageCircleHeart,
-      action: () => onNavigateSection('assistente'),
     },
     {
       label: 'Superação',
@@ -76,7 +62,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
 
   return (
     <section
-      aria-label="Acessibilidade por voz, áudio, ícones e Libras"
+      aria-label="Acessibilidade por voz, ícones e Libras"
       className="border-b border-[#EADCA6] bg-[#FAF0CA]"
     >
       <div className="mx-auto max-w-6xl px-3 py-2 sm:px-6 sm:py-3.5">
@@ -108,20 +94,6 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
 
             <button
               type="button"
-              onClick={() => setAutoReadAssistant(!autoReadAssistant)}
-              aria-pressed={autoReadAssistant}
-              className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[42px] sm:px-3.5 sm:py-2 sm:text-xs ${
-                autoReadAssistant
-                  ? 'border-[#13382C]/40 bg-[#13382C]/10 text-[#13382C]'
-                  : 'border-[#DFCE91] bg-[#FFFDF4] text-[#57534E]'
-              }`}
-            >
-              <Ear className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Voz inicial da Sophia: {autoReadAssistant ? 'Ligada' : 'Desligada'}</span>
-            </button>
-
-            <button
-              type="button"
               onClick={() => setEasyVisualMode(!easyVisualMode)}
               aria-pressed={easyVisualMode}
               className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer sm:min-h-[42px] sm:px-3.5 sm:py-2 sm:text-xs ${
@@ -140,46 +112,14 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
           </p>
         </div>
 
-        {(speechError || commandFeedback || lastCommandHeard || spokenCaption) && (
+        {(commandFeedback || lastCommandHeard) && (
           <div
             aria-live="polite"
-            className={`animate-fade-soft mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-1.5 text-[11px] sm:mt-3 sm:px-3.5 sm:py-2 sm:text-xs ${
-              speechError
-                ? 'border-red-300 bg-red-50 text-red-800'
-                : 'border-[#EADCA6] bg-[#FFFDF4] text-[#1C1917]'
-            }`}
+            className="animate-fade-soft mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#EADCA6] bg-[#FFFDF4] px-3 py-1.5 text-[11px] text-[#1C1917] sm:mt-3 sm:px-3.5 sm:py-2 sm:text-xs"
           >
             <div>
-              {speechError && <span className="font-medium">{speechError}</span>}
-              {!speechError && commandFeedback && (
+              {commandFeedback && (
                 <span className="font-medium text-[#13382C]">{commandFeedback}</span>
-              )}
-              {!speechError && !commandFeedback && spokenCaption && (
-                <span>
-                  <strong className="font-semibold text-[#13382C]">Legenda em áudio:</strong>{' '}
-                  {spokenCaption.slice(0, 180)}
-                  {spokenCaption.length > 180 ? '...' : ''}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              {speechError && (
-                <button
-                  type="button"
-                  onClick={clearSpeechError}
-                  className="font-semibold text-red-900 underline underline-offset-2 cursor-pointer"
-                >
-                  Fechar aviso
-                </button>
-              )}
-              {speakingId && (
-                <button
-                  type="button"
-                  onClick={stopSpeaking}
-                  className="font-semibold text-[#5C3A21] underline underline-offset-2 cursor-pointer"
-                >
-                  Silenciar voz
-                </button>
               )}
             </div>
           </div>
@@ -195,7 +135,7 @@ export function AccessibilityBar({ onNavigateSection, onComposeVent }: Accessibi
                 Cada botão possui ícone visual claro para navegar com facilidade.
               </p>
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-1.5 sm:mt-3 sm:grid-cols-4 sm:gap-3 lg:grid-cols-7">
+            <div className="mt-2 grid grid-cols-3 gap-1.5 sm:mt-3 sm:grid-cols-3 sm:gap-3 lg:grid-cols-6">
               {visualTiles.map((tile) => {
                 const Icon = tile.icon;
                 return (

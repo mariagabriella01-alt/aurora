@@ -62,8 +62,8 @@ export function HeroSection({ onStartVenting }: HeroSectionProps) {
 
               <p className="mx-auto mt-2.5 max-w-2xl text-center text-[13.5px] leading-[1.55] text-[#44403C] sm:mx-0 sm:mt-5 sm:text-left sm:text-base sm:leading-[1.7]">
                 Quando o vazio aperta, parece que ninguém entende o silêncio por dentro. Aqui você
-                pode desabafar sem julgamentos, conversar com a nossa assistente de apoio, descansar
-                na presença de Deus e lembrar por que sua vida importa hoje.
+                pode desabafar sem julgamentos, cuidar da sua mente e emoções, descansar na presença
+                de Deus e lembrar por que sua vida importa hoje.
               </p>
             </div>
 
@@ -76,13 +76,6 @@ export function HeroSection({ onStartVenting }: HeroSectionProps) {
                 <span>Desabafar agora</span>
                 <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
               </button>
-
-              <a
-                href="#assistente"
-                className="inline-flex min-h-[36px] items-center text-[12.5px] font-semibold text-[#13382C] underline underline-offset-4 decoration-[#13382C]/50 transition-colors hover:text-[#0D281F] whitespace-nowrap shrink-0 sm:min-h-[44px] sm:text-sm"
-              >
-                Conversar com a Sophia
-              </a>
 
               <a
                 href="#ajuda"

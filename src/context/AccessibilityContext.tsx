@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { shopiaVoiceService } from '../services/shopiaVoiceService';
 import {
   getMicrophoneErrorMessage,
   getSpeechRecognitionConstructor,
@@ -15,23 +14,12 @@ import {
 export { getSpeechRecognitionConstructor, type SpeechRecognitionLike };
 
 interface AccessibilityContextValue {
-  speechOutputSupported: boolean;
   speechInputSupported: boolean;
-  loadingSpeechId: string | null;
-  speakingId: string | null;
-  spokenCaption: string | null;
-  speechError: string | null;
-  clearSpeechError: () => void;
-  autoReadAssistant: boolean;
-  setAutoReadAssistant: (val: boolean) => void;
   easyVisualMode: boolean;
   setEasyVisualMode: (val: boolean) => void;
   listeningCommand: boolean;
   lastCommandHeard: string | null;
   commandFeedback: string | null;
-  prepareAudioForPlayback: () => void;
-  speak: (text: string, id?: string) => void;
-  stopSpeaking: () => void;
   startVoiceCommand: () => void;
   stopVoiceCommand: () => void;
   registerMicInterrupt: (id: string, stopFn: () => void) => () => void;
@@ -51,15 +39,8 @@ export function AccessibilityProvider({
   onNavigateSection,
   onComposeVent,
 }: AccessibilityProviderProps) {
-  const speechOutputSupported = shopiaVoiceService.isSupported();
   const speechInputSupported = isAnyVoiceInputSupported();
 
-  const [loadingSpeechId, setLoadingSpeechId] = useState<string | null>(null);
-  const [speakingId, setSpeakingId] = useState<string | null>(null);
-  const [spokenCaption, setSpokenCaption] = useState<string | null>(null);
-  const [speechError, setSpeechError] = useState<string | null>(null);
-  const [autoReadAssistant, setAutoReadAssistantState] = useState(true);
-  const autoReadAssistantRef = useRef(true);
   const [easyVisualMode, setEasyVisualMode] = useState(false);
 
   const [listeningCommand, setListeningCommand] = useState(false);
@@ -73,38 +54,6 @@ export function AccessibilityProvider({
   const commandTimerRef = useRef<number | null>(null);
   const commandCancelledRef = useRef(false);
   const micInterruptHandlersRef = useRef<Map<string, () => void>>(new Map());
-
-  const setAutoReadAssistant = useCallback((val: boolean) => {
-    autoReadAssistantRef.current = val;
-    setAutoReadAssistantState(val);
-    if (!val) {
-      shopiaVoiceService.stop();
-    }
-  }, []);
-
-  useEffect(() => {
-    shopiaVoiceService.setCallbacks({
-      onLoadingChange: setLoadingSpeechId,
-      onSpeakingChange: setSpeakingId,
-      onCaptionChange: setSpokenCaption,
-      onErrorChange: setSpeechError,
-    });
-    shopiaVoiceService.playInitialGreetingOnce(() => autoReadAssistantRef.current);
-    const handlePageLeave = () => {
-      shopiaVoiceService.stop();
-    };
-    window.addEventListener('pagehide', handlePageLeave);
-    window.addEventListener('beforeunload', handlePageLeave);
-    return () => {
-      window.removeEventListener('pagehide', handlePageLeave);
-      window.removeEventListener('beforeunload', handlePageLeave);
-      shopiaVoiceService.destroy();
-    };
-  }, []);
-
-  const clearSpeechError = useCallback(() => {
-    setSpeechError(null);
-  }, []);
 
   const stopCommandStream = useCallback(() => {
     if (commandTimerRef.current !== null) {
@@ -121,18 +70,6 @@ export function AccessibilityProvider({
       }
       commandStreamRef.current = null;
     }
-  }, []);
-
-  const prepareAudioForPlayback = useCallback(() => {
-    shopiaVoiceService.unlockAudio();
-  }, []);
-
-  const stopSpeaking = useCallback(() => {
-    shopiaVoiceService.stop();
-  }, []);
-
-  const speak = useCallback((text: string, id = 'global') => {
-    shopiaVoiceService.speak(text, id);
   }, []);
 
   const registerMicInterrupt = useCallback((id: string, stopFn: () => void) => {
@@ -162,7 +99,6 @@ export function AccessibilityProvider({
 
   const claimMicrophone = useCallback(
     (ownerId: string) => {
-      shopiaVoiceService.cancelPendingGreetingAutoplay();
       if (ownerId !== 'voice-command') {
         stopVoiceCommand();
       }
@@ -188,12 +124,6 @@ export function AccessibilityProvider({
 
       setLastCommandHeard(rawTranscript);
 
-      if (normalized.includes('parar') || normalized.includes('silencio')) {
-        stopSpeaking();
-        setCommandFeedback('Áudio interrompido.');
-        return;
-      }
-
       if (normalized.includes('inicio') || normalized.includes('topo')) {
         onNavigateSection('inicio');
         setCommandFeedback('Indo para o Início.');
@@ -203,18 +133,6 @@ export function AccessibilityProvider({
       if (normalized.includes('desabaf') || normalized.includes('mural') || normalized.includes('escrever')) {
         onComposeVent();
         setCommandFeedback('Indo para Desabafar.');
-        return;
-      }
-
-      if (
-        normalized.includes('assistent') ||
-        normalized.includes('sophia') ||
-        normalized.includes('shopia') ||
-        normalized.includes('sofia') ||
-        normalized.includes('convers')
-      ) {
-        onNavigateSection('assistente');
-        setCommandFeedback('Indo para a assistente Sophia.');
         return;
       }
 
@@ -276,16 +194,16 @@ export function AccessibilityProvider({
       }
 
       setCommandFeedback(
-        `Ouvi "${rawTranscript}". Diga: "desabafar", "Sophia", "superação", "saúde mental", "Deus", "motivos", "ajuda" ou "parar".`,
+        `Ouvi "${rawTranscript}". Diga: "desabafar", "superação", "saúde mental", "Deus", "motivos" ou "ajuda".`,
       );
     },
-    [onComposeVent, onNavigateSection, stopSpeaking],
+    [onComposeVent, onNavigateSection],
   );
 
   const startCommandRecorderFallback = useCallback(async () => {
     if (!isMediaRecordingSupported()) {
       setCommandFeedback(
-        'O reconhecimento de voz não está disponível neste navegador. Use os botões visuais ou converse por texto com a Sophia.',
+        'O reconhecimento de voz não está disponível neste navegador. Use os botões visuais para navegar.',
       );
       return;
     }
@@ -352,7 +270,7 @@ export function AccessibilityProvider({
 
       recorder.start();
       setCommandFeedback(
-        'Ouvindo... diga "Sophia", "desabafar", "superação", "Deus", "motivos" ou "ajuda" e toque em Parar.',
+        'Ouvindo... diga "desabafar", "superação", "Deus", "motivos" ou "ajuda" e toque em Parar.',
       );
       setListeningCommand(true);
 
@@ -370,8 +288,6 @@ export function AccessibilityProvider({
 
   const startVoiceCommand = useCallback(() => {
     claimMicrophone('voice-command');
-    prepareAudioForPlayback();
-    stopSpeaking();
 
     try {
       recognitionRef.current?.stop();
@@ -381,7 +297,7 @@ export function AccessibilityProvider({
 
     if (!isAnyVoiceInputSupported()) {
       setCommandFeedback(
-        'O reconhecimento de voz não está disponível neste navegador. Use os botões visuais grandes ou a leitura em voz alta.',
+        'O reconhecimento de voz não está disponível neste navegador. Use os botões visuais grandes para navegar.',
       );
       return;
     }
@@ -431,7 +347,7 @@ export function AccessibilityProvider({
 
       recognitionRef.current = rec;
       setCommandFeedback(
-        'Pode falar o comando agora: "Sophia", "desabafar", "superação", "Deus", "motivos" ou "ajuda".',
+        'Pode falar o comando agora: "desabafar", "superação", "Deus", "motivos" ou "ajuda".',
       );
       setListeningCommand(true);
       rec.start();
@@ -443,13 +359,7 @@ export function AccessibilityProvider({
         setCommandFeedback('Não foi possível iniciar o microfone neste navegador.');
       }
     }
-  }, [
-    claimMicrophone,
-    executeVoiceCommand,
-    prepareAudioForPlayback,
-    startCommandRecorderFallback,
-    stopSpeaking,
-  ]);
+  }, [claimMicrophone, executeVoiceCommand, startCommandRecorderFallback]);
 
   useEffect(() => {
     return () => {
@@ -469,23 +379,12 @@ export function AccessibilityProvider({
   return (
     <AccessibilityContext.Provider
       value={{
-        speechOutputSupported,
         speechInputSupported,
-        loadingSpeechId,
-        speakingId,
-        spokenCaption,
-        speechError,
-        clearSpeechError,
-        autoReadAssistant,
-        setAutoReadAssistant,
         easyVisualMode,
         setEasyVisualMode,
         listeningCommand,
         lastCommandHeard,
         commandFeedback,
-        prepareAudioForPlayback,
-        speak,
-        stopSpeaking,
         startVoiceCommand,
         stopVoiceCommand,
         registerMicInterrupt,

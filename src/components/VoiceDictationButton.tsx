@@ -25,8 +25,7 @@ export function VoiceDictationButton({
   onStatusChange,
   className = '',
 }: VoiceDictationButtonProps) {
-  const { claimMicrophone, prepareAudioForPlayback, registerMicInterrupt, stopSpeaking } =
-    useAccessibility();
+  const { claimMicrophone, registerMicInterrupt } = useAccessibility();
   const [listening, setListening] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
 
@@ -184,9 +183,6 @@ export function VoiceDictationButton({
 
   const handleToggle = () => {
     if (transcribing) return;
-
-    prepareAudioForPlayback();
-    stopSpeaking();
 
     if (listening) {
       try {

@@ -5,7 +5,6 @@ import {
   Flame,
   History,
   Lock,
-  MessageCircleHeart,
   Plus,
   RefreshCw,
   ShieldAlert,
@@ -13,12 +12,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
-import { useAccessibility } from '../context/AccessibilityContext';
-import type { RecoveryGoal, SophiaPromptRequest } from '../types';
-
-interface MinhaSuperacaoSectionProps {
-  onAskSophia: (request: Omit<SophiaPromptRequest, 'trigger'>) => void;
-}
+import type { RecoveryGoal } from '../types';
 
 const STORAGE_KEY = 'aurora_superacao_goals_v1';
 
@@ -132,15 +126,9 @@ function loadGoalsFromStorage(): RecoveryGoal[] {
   }
 }
 
-export function MinhaSuperacaoSection({ onAskSophia }: MinhaSuperacaoSectionProps) {
-  const { prepareAudioForPlayback } = useAccessibility();
+export function MinhaSuperacaoSection() {
   const [goals, setGoals] = useState<RecoveryGoal[]>(() => loadGoalsFromStorage());
   const [nowMs, setNowMs] = useState(() => Date.now());
-
-  const askSophiaWithAudioUnlock = (request: Omit<SophiaPromptRequest, 'trigger'>) => {
-    prepareAudioForPlayback();
-    onAskSophia(request);
-  };
 
   const [showCreateForm, setShowCreateForm] = useState(() => loadGoalsFromStorage().length === 0);
   const [habitName, setHabitName] = useState('');
@@ -420,11 +408,11 @@ export function MinhaSuperacaoSection({ onAskSophia }: MinhaSuperacaoSectionProp
               Nenhum objetivo adicionado ainda
             </h3>
             <p className="mx-auto mt-1.5 max-w-xl text-[12.5px] leading-relaxed text-[#57534E] sm:text-sm">
-              Crie seu primeiro objetivo acima para acompanhar dias e horas de superação, conquistar
-              marcos de 1 a 365 dias e conversar com a Sophia sempre que precisar de força.
+              Crie seu primeiro objetivo acima para acompanhar dias e horas de superação e
+              conquistar marcos de 1 a 365 dias no seu ritmo.
             </p>
-            <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2">
-              {!showCreateForm && (
+            {!showCreateForm && (
+              <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(true)}
@@ -433,21 +421,8 @@ export function MinhaSuperacaoSection({ onAskSophia }: MinhaSuperacaoSectionProp
                   <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Adicionar meu primeiro objetivo</span>
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={() =>
-                  askSophiaWithAudioUnlock({
-                    prompt:
-                      'Sophia, quero vencer um vício ou hábito difícil na minha vida e estou começando hoje. Pode me dar palavras de calma e orientação?',
-                  })
-                }
-                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-[#13382C]/35 bg-[#FFFDF4] px-3.5 py-2 text-xs font-semibold text-[#13382C] hover:bg-[#FAF0CA] cursor-pointer"
-              >
-                <MessageCircleHeart className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>Conversar com a Sophia</span>
-              </button>
-            </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="mt-4 space-y-4 sm:mt-7 sm:space-y-6">
@@ -720,73 +695,8 @@ export function MinhaSuperacaoSection({ onAskSophia }: MinhaSuperacaoSectionProp
                     </div>
                   </div>
 
-                  {/* Integração direta com a Sophia + Recaída + Histórico */}
+                  {/* Recaída + Histórico */}
                   <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:mt-4 sm:gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        askSophiaWithAudioUnlock({
-                          prompt: `Sophia, estou acompanhando meu objetivo "${goal.habitName}" em Minha Superação (${daysClean} dias e ${hoursClean} horas). Pode me dar uma mensagem de incentivo para continuar firme hoje?`,
-                          recoveryContext: {
-                            habitName: goal.habitName,
-                            daysClean,
-                            hoursClean,
-                            bestDays,
-                            relapseCount: goal.history.length,
-                            intent: 'motivation',
-                          },
-                        })
-                      }
-                      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg bg-[#13382C] px-3 py-1.5 text-[11px] font-semibold text-[#FEF9E6] transition-all hover:bg-[#0D281F] active:scale-[0.98] cursor-pointer sm:min-h-[40px] sm:px-3.5 sm:text-xs"
-                    >
-                      <MessageCircleHeart className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>Pedir incentivo à Sophia</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        askSophiaWithAudioUnlock({
-                          prompt: `Sophia, estou sentindo vontade forte ou gatilho agora em relação ao meu objetivo "${goal.habitName}". O que posso fazer nos próximos minutos para atravessar isso com calma?`,
-                          recoveryContext: {
-                            habitName: goal.habitName,
-                            daysClean,
-                            hoursClean,
-                            bestDays,
-                            relapseCount: goal.history.length,
-                            intent: 'craving',
-                          },
-                        })
-                      }
-                      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#13382C]/35 bg-[#FFFDF4] px-3 py-1.5 text-[11px] font-semibold text-[#13382C] transition-all hover:bg-[#FAF0CA] active:scale-[0.98] cursor-pointer sm:min-h-[40px] sm:px-3.5 sm:text-xs"
-                    >
-                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>Estratégia para vontade agora</span>
-                    </button>
-
-                    {latestUnlocked && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          askSophiaWithAudioUnlock({
-                            prompt: `Sophia, completei ${daysClean} dias e ${hoursClean} horas em "${goal.habitName}" (marco de ${latestUnlocked.title})! Quero comemorar essa conquista com você.`,
-                            recoveryContext: {
-                              habitName: goal.habitName,
-                              daysClean,
-                              hoursClean,
-                              bestDays,
-                              relapseCount: goal.history.length,
-                              intent: 'milestone',
-                            },
-                          })
-                        }
-                        className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#DFCE91] bg-[#FAF0CA] px-3 py-1.5 text-[11px] font-semibold text-[#5C3A21] transition-all hover:border-[#8A5A10] active:scale-[0.98] cursor-pointer sm:min-h-[40px] sm:px-3.5 sm:text-xs"
-                      >
-                        <Award className="h-3.5 w-3.5" aria-hidden="true" />
-                        <span>Comemorar com a Sophia</span>
-                      </button>
-                    )}
-
                     <button
                       type="button"
                       onClick={() => {
@@ -852,25 +762,6 @@ export function MinhaSuperacaoSection({ onAskSophia }: MinhaSuperacaoSectionProp
                         </button>
                         <button
                           type="button"
-                          onClick={() =>
-                            askSophiaWithAudioUnlock({
-                              prompt: `Sophia, tive uma recaída em "${goal.habitName}" e estou me sentindo mal com isso. Pode me acolher e me ajudar a recomeçar sem culpa?`,
-                              recoveryContext: {
-                                habitName: goal.habitName,
-                                daysClean: 0,
-                                hoursClean: 0,
-                                bestDays,
-                                relapseCount: goal.history.length + 1,
-                                intent: 'relapse',
-                              },
-                            })
-                          }
-                          className="min-h-[36px] rounded-lg border border-[#13382C]/35 bg-[#FEF9E6] px-3 py-1.5 text-xs font-semibold text-[#13382C] hover:bg-[#FAF0CA] cursor-pointer"
-                        >
-                          Falar com a Sophia sobre isso
-                        </button>
-                        <button
-                          type="button"
                           onClick={() => setRelapseTargetId(null)}
                           className="min-h-[36px] rounded-lg border border-[#DFCE91] bg-white px-3 py-1.5 text-xs font-medium text-[#44403C] cursor-pointer"
                         >
@@ -921,8 +812,8 @@ export function MinhaSuperacaoSection({ onAskSophia }: MinhaSuperacaoSectionProp
         <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-[#EADCA6] bg-[#FAF0CA]/70 p-3 text-[11.5px] leading-relaxed text-[#4A3B2C] sm:mt-6 sm:p-4 sm:text-xs">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[#8A5A10]" aria-hidden="true" />
           <p>
-            <strong>Cuidado com a sua saúde:</strong> A Aurora e a assistente virtual Sophia oferecem
-            apoio emocional e acompanhamento de hábitos, mas não substituem médicos ou psicólogos.
+            <strong>Cuidado com a sua saúde:</strong> A Aurora oferece apoio emocional e
+            acompanhamento de hábitos, mas não substitui médicos ou psicólogos.
             Em casos de dependência de álcool, medicamentos ou outras substâncias químicas,{' '}
             <strong>nunca interrompa o uso de forma abrupta sem orientação médica</strong> — procure
             uma UBS, CAPS AD ou profissional de saúde para uma travessia segura.

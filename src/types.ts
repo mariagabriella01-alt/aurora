@@ -80,17 +80,5 @@ export interface RecoveryGoal {
   lastRelapseMessageAt?: string;
 }
 
-export interface SophiaPromptRequest {
-  prompt: string;
-  recoveryContext?: {
-    habitName: string;
-    daysClean: number;
-    hoursClean: number;
-    bestDays: number;
-    relapseCount: number;
-    intent: 'motivation' | 'milestone' | 'craving' | 'relapse';
-  };
-  trigger: number;
-}
 
 

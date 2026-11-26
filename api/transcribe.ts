@@ -129,7 +129,7 @@ export default async function handler(req: Req, res: ServerResponse): Promise<vo
         JSON.stringify({
           ok: configured,
           configured,
-          service: 'sophia-transcribe',
+          service: 'aurora-transcribe',
           envVar: 'GEMINI_API_KEY',
         }),
       );

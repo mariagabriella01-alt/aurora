@@ -1,13 +1,5 @@
 {
   "functions": {
-    "api/tts.ts": {
-      "maxDuration": 30,
-      "includeFiles": "public/assets/aistudio/**"
-    },
-    "api/tts/status.ts": {
-      "maxDuration": 30,
-      "includeFiles": "public/assets/aistudio/**"
-    },
     "api/**/*.ts": {
       "maxDuration": 30
     }

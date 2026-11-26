@@ -128,9 +128,6 @@ export function Footer() {
             <a href="#desabafar" className="py-1 hover:text-[#1C1917]">
               Desabafar
             </a>
-            <a href="#assistente" className="py-1 hover:text-[#1C1917]">
-              Sophia
-            </a>
             <a href="#superacao" className="py-1 hover:text-[#1C1917]">
               Minha Superação
             </a>
