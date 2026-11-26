@@ -96,11 +96,48 @@ function sanitizeText(value: unknown, maxLen: number): string {
   return value.trim().slice(0, maxLen);
 }
 
+function normalizeEnvSecret(value: string | undefined): string {
+  const trimmed = (value || '').trim();
+  if (!trimmed || trimmed === 'MY_GEMINI_API_KEY') return '';
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    const inner = trimmed.slice(1, -1).trim();
+    return inner === 'MY_GEMINI_API_KEY' ? '' : inner;
+  }
+  return trimmed;
+}
+
+function getGeminiApiKey(): string {
+  return normalizeEnvSecret(process.env.GEMINI_API_KEY);
+}
+
 export default async function handler(req: Req, res: ServerResponse): Promise<void> {
   try {
     if (req.method === 'OPTIONS') {
       res.statusCode = 204;
       res.end();
+      return;
+    }
+
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      const configured = Boolean(getGeminiApiKey());
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store');
+      if (req.method === 'HEAD') {
+        res.end();
+        return;
+      }
+      res.end(
+        JSON.stringify({
+          ok: configured,
+          configured,
+          service: 'sophia-assistant',
+          envVar: 'GEMINI_API_KEY',
+        }),
+      );
       return;
     }
 
@@ -116,7 +153,7 @@ export default async function handler(req: Req, res: ServerResponse): Promise<vo
       return;
     }
 
-    const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+    const apiKey = getGeminiApiKey();
     if (!apiKey) {
       sendJson(res, 503, {
         error:
@@ -201,17 +238,22 @@ export default async function handler(req: Req, res: ServerResponse): Promise<vo
     });
 
     const candidateModels = [
-      'gemini-3.5-flash-lite',
-      'gemini-3-flash-preview',
-      'gemini-3.5-flash',
       'gemini-4-hydrogen',
+      'gemini-3.1-flash-lite',
+      'gemini-2.5-flash',
+      'gemini-3-flash-preview',
     ] as const;
+    const deadlineMs = Date.now() + 24_000;
     let lastErr: unknown = null;
 
     for (const modelName of candidateModels) {
+      const remainingMs = deadlineMs - Date.now();
+      if (remainingMs < 2_500) break;
+      const attemptTimeoutMs = Math.min(9_000, remainingMs);
+
       try {
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), 10_000),
+          setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), attemptTimeoutMs),
         );
         const response = await Promise.race([
           ai.models.generateContent({
@@ -250,7 +292,7 @@ export default async function handler(req: Req, res: ServerResponse): Promise<vo
     ) {
       sendJson(res, 502, {
         error:
-          'Não foi possível autenticar a assistente. Verifique a chave configurada em Settings > Secrets ou na Vercel.',
+          'Não foi possível autenticar a assistente. Verifique a chave GEMINI_API_KEY configurada em Settings > Secrets ou na Vercel.',
       });
       return;
     }

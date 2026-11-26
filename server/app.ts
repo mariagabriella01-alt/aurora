@@ -29,8 +29,21 @@ const SHOPIA_GREETING_AUDIO_FILE = path.join(
   'Oi__voc__est__bem__Eu_sou_a_So.._67203881.m4a',
 );
 
+function normalizeEnvSecret(value: string | undefined): string {
+  const trimmed = (value || '').trim();
+  if (!trimmed || trimmed === 'MY_GEMINI_API_KEY') return '';
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    const inner = trimmed.slice(1, -1).trim();
+    return inner === 'MY_GEMINI_API_KEY' ? '' : inner;
+  }
+  return trimmed;
+}
+
 function getGeminiApiKey(): string {
-  return (process.env.GEMINI_API_KEY || '').trim();
+  return normalizeEnvSecret(process.env.GEMINI_API_KEY);
 }
 
 function normalizeComparisonText(value: string): string {
@@ -408,6 +421,17 @@ export function createAuroraApiApp(): express.Express {
     return cachedAi;
   };
 
+  app.get('/api/transcribe', (_req, res) => {
+    const configured = Boolean(getGeminiApiKey());
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({
+      ok: configured,
+      configured,
+      service: 'aurora-transcribe',
+      envVar: 'GEMINI_API_KEY',
+    });
+  });
+
   app.post('/api/transcribe', express.json({ limit: '6mb' }), async (req, res) => {
     if (isRateLimited(`transcribe:${getClientIp(req)}`, 20, 60_000)) {
       res.status(429).json({
@@ -459,13 +483,13 @@ export function createAuroraApiApp(): express.Express {
       return;
     }
 
-    const transcribeModels = ['gemini-3.5-transcribe', 'gemini-3.5-flash-lite'] as const;
+    const transcribeModels = ['gemini-3.5-transcribe', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'] as const;
     let lastErr: unknown = null;
 
     for (const modelName of transcribeModels) {
       try {
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), 15_000),
+          setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), 10_000),
         );
 
         const response = await Promise.race([
@@ -504,7 +528,7 @@ export function createAuroraApiApp(): express.Express {
     }
 
     const message = lastErr instanceof Error ? lastErr.message : String(lastErr ?? 'Erro transcrição');
-    console.error('[Sophia /api/transcribe error]:', message);
+    console.error('[Aurora /api/transcribe error]:', message);
     res.status(503).json({
       error: 'Não foi possível transcrever o áudio agora. Você também pode digitar sua mensagem.',
     });
@@ -724,6 +748,17 @@ export function createAuroraApiApp(): express.Express {
     res.json(reason);
   });
 
+  app.get('/api/assistant', (_req, res) => {
+    const configured = Boolean(getGeminiApiKey());
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({
+      ok: configured,
+      configured,
+      service: 'sophia-assistant',
+      envVar: 'GEMINI_API_KEY',
+    });
+  });
+
   app.post('/api/assistant', async (req, res) => {
     if (isRateLimited(`ai:${getClientIp(req)}`, 15, 60_000)) {
       res.status(429).json({
@@ -811,17 +846,22 @@ export function createAuroraApiApp(): express.Express {
       recoveryNote;
 
     const candidateModels = [
-      'gemini-3.5-flash-lite',
-      'gemini-3-flash-preview',
-      'gemini-3.5-flash',
       'gemini-4-hydrogen',
+      'gemini-3.1-flash-lite',
+      'gemini-2.5-flash',
+      'gemini-3-flash-preview',
     ] as const;
+    const deadlineMs = Date.now() + 24_000;
     let lastErr: unknown = null;
 
     for (const modelName of candidateModels) {
+      const remainingMs = deadlineMs - Date.now();
+      if (remainingMs < 2_500) break;
+      const attemptTimeoutMs = Math.min(9_000, remainingMs);
+
       try {
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), 10_000),
+          setTimeout(() => reject(new Error('503 UNAVAILABLE timeout')), attemptTimeoutMs),
         );
         const response = await Promise.race([
           aiClient.models.generateContent({
@@ -860,7 +900,7 @@ export function createAuroraApiApp(): express.Express {
     ) {
       res.status(502).json({
         error:
-          'Não foi possível autenticar a assistente. Verifique a chave configurada em Settings > Secrets ou na Vercel.',
+          'Não foi possível autenticar a assistente. Verifique a chave GEMINI_API_KEY configurada em Settings > Secrets ou na Vercel.',
       });
       return;
     }

@@ -205,8 +205,8 @@ export function AssistantSection({ externalPromptRequest }: AssistantSectionProp
             </h2>
             <p className="mt-2 text-[13.5px] leading-[1.55] text-[#57534E] sm:mt-3 sm:text-base sm:leading-relaxed">
               Funciona no celular e no computador: se preferir não escrever, toque em{' '}
-              <strong>Falar por voz</strong> e conte o que está sentindo. A resposta da Sophia
-              também pode ser ouvida em voz calma e acompanhada em texto.
+              <strong>Falar por voz</strong> e conte o que está sentindo. A saudação inicial conta
+              com a voz da Sophia, e toda a conversa segue em texto acolhedor.
             </p>
 
             <div className="mt-3.5 sm:mt-6">

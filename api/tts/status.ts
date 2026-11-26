@@ -10,7 +10,7 @@ const SHOPIA_GREETING_AUDIO_FILE = path.join(
   'Oi__voc__est__bem__Eu_sou_a_So.._67203881.m4a',
 );
 
-export default async function handler(_req: IncomingMessage, res: ServerResponse): Promise<void> {
+export default function handler(_req: IncomingMessage, res: ServerResponse): void {
   const apiUrl = (process.env.SHOPIA_TTS_API_URL || '').trim();
   const apiKey = (process.env.SHOPIA_TTS_API_KEY || '').trim();
   const voiceId = (process.env.SHOPIA_VOICE_ID || '').trim();

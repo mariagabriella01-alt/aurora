@@ -185,7 +185,6 @@ export function VoiceDictationButton({
   const handleToggle = () => {
     if (transcribing) return;
 
-    // Unlock audio output synchronously on user gesture so mobile Safari/Chrome plays Sophia's spoken reply right after.
     prepareAudioForPlayback();
     stopSpeaking();
 

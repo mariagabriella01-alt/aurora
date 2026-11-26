@@ -2,20 +2,10 @@ import fs from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 
-type Req = IncomingMessage & { body?: unknown; query?: Record<string, string | string[]> };
-type Res = ServerResponse & {
-  status?: (code: number) => Res;
-  json?: (data: unknown) => void;
-  send?: (body: unknown) => void;
-};
-
-interface CachedAudio {
-  buffer: Buffer;
-  contentType: string;
-}
+type Req = IncomingMessage & { body?: unknown };
 
 const rateBuckets = new Map<string, number[]>();
-const ttsCache = new Map<string, CachedAudio>();
+const ttsCache = new Map<string, { buffer: Buffer; contentType: string }>();
 
 const SHOPIA_GREETING_AUDIO_FILE = path.join(
   process.cwd(),
@@ -95,14 +85,12 @@ async function readJsonBody(req: Req, maxBytes = 64 * 1024): Promise<Record<stri
     let size = 0;
     const chunks: Buffer[] = [];
     let settled = false;
-
     const finish = (obj: Record<string, unknown>) => {
       if (!settled) {
         settled = true;
         resolve(obj);
       }
     };
-
     req.on('data', (chunk: Buffer) => {
       size += chunk.length;
       if (size > maxBytes) {
@@ -128,14 +116,19 @@ async function readJsonBody(req: Req, maxBytes = 64 * 1024): Promise<Record<stri
   });
 }
 
-function sendJson(res: Res, statusCode: number, payload: unknown): void {
+function sendJson(res: ServerResponse, statusCode: number, payload: unknown): void {
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
   res.end(JSON.stringify(payload));
 }
 
-function prepareShopiaSpeechText(raw: string): string {
+function sanitizeText(value: unknown, maxLen: number): string {
+  if (typeof value !== 'string') return '';
+  return value.trim().slice(0, maxLen);
+}
+
+function prepareNaturalSpeechText(raw: string): string {
   return raw
     .replace(/([.!?])\s*\n+/g, '$1 ')
     .replace(/\n{2,}/g, '. ')
@@ -151,7 +144,7 @@ function prepareShopiaSpeechText(raw: string): string {
     .trim();
 }
 
-function getShopiaConfig() {
+function getShopiaVoiceConfig() {
   const apiUrl = (process.env.SHOPIA_TTS_API_URL || '').trim();
   const apiKey = (process.env.SHOPIA_TTS_API_KEY || '').trim();
   const voiceId = (process.env.SHOPIA_VOICE_ID || '').trim();
@@ -168,7 +161,7 @@ function getShopiaConfig() {
   };
 }
 
-export default async function handler(req: Req, res: Res): Promise<void> {
+export default async function handler(req: Req, res: ServerResponse): Promise<void> {
   try {
     if (req.method === 'OPTIONS') {
       res.statusCode = 204;
@@ -176,20 +169,28 @@ export default async function handler(req: Req, res: Res): Promise<void> {
       return;
     }
 
-    const cfg = getShopiaConfig();
-
-    if (req.method === 'GET') {
-      sendJson(res, 200, {
-        ok: cfg.isConfigured || cfg.greetingAudioAvailable,
-        provider: 'shopia',
-        shopiaConfigured: cfg.isConfigured,
-        hasApiUrl: Boolean(cfg.apiUrl),
-        hasApiKey: Boolean(cfg.apiKey),
-        hasVoiceId: Boolean(cfg.voiceId),
-        voiceId: cfg.voiceId || 'unconfigured',
-        ttsModel: cfg.model || 'shopia-exclusive',
-        greetingAudioAvailable: cfg.greetingAudioAvailable,
-      });
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      const cfg = getShopiaVoiceConfig();
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store');
+      if (req.method === 'HEAD') {
+        res.end();
+        return;
+      }
+      res.end(
+        JSON.stringify({
+          ok: cfg.isConfigured || cfg.greetingAudioAvailable,
+          provider: 'shopia',
+          shopiaConfigured: cfg.isConfigured,
+          hasApiUrl: Boolean(cfg.apiUrl),
+          hasApiKey: Boolean(cfg.apiKey),
+          hasVoiceId: Boolean(cfg.voiceId),
+          voiceId: cfg.voiceId || 'unconfigured',
+          ttsModel: cfg.model || 'shopia-exclusive',
+          greetingAudioAvailable: cfg.greetingAudioAvailable,
+        }),
+      );
       return;
     }
 
@@ -206,11 +207,13 @@ export default async function handler(req: Req, res: Res): Promise<void> {
     }
 
     const body = await readJsonBody(req);
-    const rawText = typeof body.text === 'string' ? body.text.trim().slice(0, 2200) : '';
+    const rawText = sanitizeText(body.text, 2200);
     if (!rawText) {
       sendJson(res, 400, { error: 'Texto vazio para leitura com a voz da Shopia.' });
       return;
     }
+
+    const cfg = getShopiaVoiceConfig();
 
     if (isShopiaGreetingText(rawText) && cfg.greetingAudioAvailable) {
       const audioBuffer = fs.readFileSync(SHOPIA_GREETING_AUDIO_FILE);
@@ -232,8 +235,9 @@ export default async function handler(req: Req, res: Res): Promise<void> {
       return;
     }
 
-    const text = prepareShopiaSpeechText(rawText);
+    const text = prepareNaturalSpeechText(rawText);
     const cacheKey = `shopia:${cfg.voiceId}:${cfg.model}:${text}`;
+
     const cached = ttsCache.get(cacheKey);
     if (cached) {
       ttsCache.delete(cacheKey);
@@ -267,7 +271,7 @@ export default async function handler(req: Req, res: Res): Promise<void> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 18_000);
 
-    let upstreamRes: Response;
+    let upstreamRes: globalThis.Response;
     try {
       upstreamRes = await fetch(targetUrl, {
         method: 'POST',
