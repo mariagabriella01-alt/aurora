@@ -84,6 +84,7 @@ export function VentWallSection({
   const [replyAuthor, setReplyAuthor] = useState('');
   const [replyContent, setReplyContent] = useState('');
   const [replySubmitting, setReplySubmitting] = useState(false);
+  const [replyError, setReplyError] = useState<string | null>(null);
   const [embracedIds, setEmbracedIds] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -176,11 +177,15 @@ export function VentWallSection({
     }
   };
 
-  const handleEmbrace = async (ventId: string) => {
-    if (embracedIds[ventId]) return;
-    setEmbracedIds((prev) => ({ ...prev, [ventId]: true }));
+  const handleEmbrace = async (vent: Vent) => {
+    if (embracedIds[vent.id]) return;
+    setEmbracedIds((prev) => ({ ...prev, [vent.id]: true }));
     try {
-      const res = await fetch(`/api/vents/${ventId}/embrace`, { method: 'POST' });
+      const res = await fetch(`/api/vents/${vent.id}/embrace`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parentVent: vent }),
+      });
       if (res.ok) {
         const updated = (await res.json()) as Vent;
         onVentUpdated(updated);
@@ -190,27 +195,38 @@ export function VentWallSection({
     }
   };
 
-  const handleReplySubmit = async (e: FormEvent, ventId: string) => {
+  const handleReplySubmit = async (e: FormEvent, vent: Vent) => {
     e.preventDefault();
-    if (replyContent.trim().length < 4) return;
+    const trimmed = replyContent.trim();
+    if (trimmed.length < 4) {
+      setReplyError('Escreva uma mensagem de apoio com pelo menos 4 caracteres.');
+      return;
+    }
 
+    setReplyError(null);
     setReplySubmitting(true);
     try {
-      const res = await fetch(`/api/vents/${ventId}/replies`, {
+      const res = await fetch(`/api/vents/${vent.id}/replies`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           author: replyAuthor.trim() || 'Alguém que se importa',
-          content: replyContent.trim(),
+          content: trimmed,
+          parentVent: vent,
         }),
       });
-      if (res.ok) {
-        const updated = (await res.json()) as Vent;
-        onVentUpdated(updated);
-        setReplyContent('');
-        setReplyAuthor('');
-        setOpenReplyId(null);
+      const data = (await res.json().catch(() => null)) as (Vent & { error?: string }) | null;
+      if (!res.ok || !data) {
+        setReplyError(data?.error || 'Não foi possível publicar seu comentário agora. Tente novamente.');
+        return;
       }
+      onVentUpdated(data);
+      setReplyContent('');
+      setReplyAuthor('');
+      setReplyError(null);
+      setOpenReplyId(null);
+    } catch {
+      setReplyError('Erro de conexão ao enviar seu comentário. Tente novamente em instantes.');
     } finally {
       setReplySubmitting(false);
     }
@@ -497,7 +513,7 @@ export function VentWallSection({
                     <div className="mt-3 flex flex-wrap items-center gap-2.5 border-t border-[#F4E9BF] pt-2.5 sm:mt-5 sm:gap-5 sm:pt-4">
                       <button
                         type="button"
-                        onClick={() => handleEmbrace(vent.id)}
+                        onClick={() => handleEmbrace(vent)}
                         className={`inline-flex min-h-[34px] items-center gap-1.5 text-[11.5px] font-semibold transition-colors whitespace-nowrap cursor-pointer sm:min-h-[38px] sm:gap-2 sm:text-xs ${
                           embracedIds[vent.id]
                             ? 'text-[#13382C]'
@@ -515,9 +531,10 @@ export function VentWallSection({
 
                       <button
                         type="button"
-                        onClick={() =>
-                          setOpenReplyId((prev) => (prev === vent.id ? null : vent.id))
-                        }
+                        onClick={() => {
+                          setReplyError(null);
+                          setOpenReplyId((prev) => (prev === vent.id ? null : vent.id));
+                        }}
                         className="inline-flex min-h-[34px] items-center gap-1.5 text-[11.5px] font-semibold text-[#57534E] transition-colors hover:text-[#1C1917] whitespace-nowrap cursor-pointer sm:min-h-[38px] sm:gap-2 sm:text-xs"
                       >
                         <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
@@ -546,7 +563,7 @@ export function VentWallSection({
 
                     {openReplyId === vent.id && (
                       <form
-                        onSubmit={(e) => handleReplySubmit(e, vent.id)}
+                        onSubmit={(e) => handleReplySubmit(e, vent)}
                         className="mt-3 space-y-2.5 border-t border-[#F4E9BF] pt-3 sm:mt-4 sm:space-y-3 sm:pt-4"
                       >
                         <input
@@ -561,14 +578,28 @@ export function VentWallSection({
                           rows={2}
                           maxLength={600}
                           value={replyContent}
-                          onChange={(e) => setReplyContent(e.target.value)}
+                          onChange={(e) => {
+                            setReplyContent(e.target.value);
+                            if (replyError) setReplyError(null);
+                          }}
                           placeholder="Escreva uma palavra gentil para ajudar essa pessoa hoje..."
                           className="w-full rounded-lg border border-[#DFCE91] bg-white px-2.5 py-1.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:px-3 sm:py-2 sm:text-sm"
                         />
+                        {replyError && (
+                          <p
+                            role="status"
+                            className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-[11.5px] leading-relaxed text-red-800 sm:text-xs"
+                          >
+                            {replyError}
+                          </p>
+                        )}
                         <div className="flex items-center justify-end gap-2 sm:gap-3">
                           <button
                             type="button"
-                            onClick={() => setOpenReplyId(null)}
+                            onClick={() => {
+                              setReplyError(null);
+                              setOpenReplyId(null);
+                            }}
                             className="min-h-[36px] px-2.5 py-1 text-xs font-medium text-[#57534E] hover:text-[#1C1917] cursor-pointer sm:min-h-[40px] sm:px-3 sm:py-1.5"
                           >
                             Cancelar

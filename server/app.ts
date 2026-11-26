@@ -255,43 +255,171 @@ function createInitialData(): SanctuaryData {
   };
 }
 
-function readStore(): SanctuaryData {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    if (!fs.existsSync(DATA_FILE)) {
-      const seed = createInitialData();
-      fs.writeFileSync(DATA_FILE, JSON.stringify(seed, null, 2), 'utf8');
-      return seed;
-    }
-    const raw = fs.readFileSync(DATA_FILE, 'utf8');
-    const parsed = JSON.parse(raw) as SanctuaryData;
-    if (!parsed || !Array.isArray(parsed.vents) || !Array.isArray(parsed.prayers) || !Array.isArray(parsed.reasons)) {
-      const seed = createInitialData();
-      fs.writeFileSync(DATA_FILE, JSON.stringify(seed, null, 2), 'utf8');
-      return seed;
-    }
-    const seed = createInitialData();
-    const existingIds = new Set(parsed.vents.map((v) => v.id));
-    const missingSeeds = seed.vents.filter((v) => !existingIds.has(v.id));
-    if (missingSeeds.length > 0) {
-      parsed.vents = [...parsed.vents, ...missingSeeds];
-      fs.writeFileSync(DATA_FILE, JSON.stringify(parsed, null, 2), 'utf8');
-    }
-    return parsed;
-  } catch {
-    return createInitialData();
-  }
+const KV_STORE_KEY = 'aurora:sanctuary:v1';
+
+function getRedisRestConfig(): { url: string; token: string } | null {
+  const url = (process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '')
+    .trim()
+    .replace(/\/+$/, '');
+  const token = (process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '').trim();
+  if (!url || !token) return null;
+  return { url, token };
 }
 
-function writeStore(data: SanctuaryData): void {
+function normalizeStore(parsed: Partial<SanctuaryData> | null | undefined): SanctuaryData | null {
+  if (!parsed || !Array.isArray(parsed.vents) || !Array.isArray(parsed.prayers) || !Array.isArray(parsed.reasons)) {
+    return null;
+  }
+  const vents = parsed.vents.map((v) => ({
+    ...v,
+    embraces: typeof v.embraces === 'number' && Number.isFinite(v.embraces) ? v.embraces : 1,
+    replies: Array.isArray(v.replies) ? v.replies : [],
+  }));
+  const seed = createInitialData();
+  const existingIds = new Set(vents.map((v) => v.id));
+  const missingSeeds = seed.vents.filter((v) => !existingIds.has(v.id));
+  return {
+    vents: missingSeeds.length > 0 ? [...vents, ...missingSeeds] : vents,
+    prayers: parsed.prayers,
+    reasons: parsed.reasons,
+  };
+}
+
+let storeMutex: Promise<void> = Promise.resolve();
+
+function withStoreLock<T>(task: () => Promise<T>): Promise<T> {
+  const run = storeMutex.then(task, task);
+  storeMutex = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
+async function readStore(): Promise<SanctuaryData> {
+  const redis = getRedisRestConfig();
+  if (redis) {
+    const res = await fetch(`${redis.url}/get/${encodeURIComponent(KV_STORE_KEY)}`, {
+      headers: { Authorization: `Bearer ${redis.token}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      throw new Error(`KV read failed (${res.status})`);
+    }
+    const payload = (await res.json()) as { result?: string | null };
+    if (typeof payload.result === 'string' && payload.result.length > 0) {
+      const parsed = JSON.parse(payload.result) as Partial<SanctuaryData>;
+      const normalized = normalizeStore(parsed);
+      if (normalized) return normalized;
+    }
+    const seed = createInitialData();
+    await writeStore(seed);
+    return seed;
+  }
+
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
-  const tmpFile = `${DATA_FILE}.${process.pid}.tmp`;
-  fs.writeFileSync(tmpFile, JSON.stringify(data, null, 2), 'utf8');
-  fs.renameSync(tmpFile, DATA_FILE);
+  if (!fs.existsSync(DATA_FILE)) {
+    const seed = createInitialData();
+    writeStoreToFile(seed);
+    return seed;
+  }
+  const raw = fs.readFileSync(DATA_FILE, 'utf8');
+  const parsed = JSON.parse(raw) as Partial<SanctuaryData>;
+  const normalized = normalizeStore(parsed);
+  if (!normalized) {
+    const seed = createInitialData();
+    writeStoreToFile(seed);
+    return seed;
+  }
+  return normalized;
+}
+
+function writeStoreToFile(data: SanctuaryData): void {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+  const tmpFile = `${DATA_FILE}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2, 7)}.tmp`;
+  try {
+    fs.writeFileSync(tmpFile, JSON.stringify(data, null, 2), 'utf8');
+    fs.renameSync(tmpFile, DATA_FILE);
+  } catch (err) {
+    try {
+      if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+    } catch {
+      // Ignore cleanup error
+    }
+    throw err;
+  }
+}
+
+async function writeStore(data: SanctuaryData): Promise<void> {
+  const redis = getRedisRestConfig();
+  if (redis) {
+    const res = await fetch(redis.url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${redis.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(['SET', KV_STORE_KEY, JSON.stringify(data)]),
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      throw new Error(`KV write failed (${res.status})`);
+    }
+    return;
+  }
+  writeStoreToFile(data);
+}
+
+function setNoStoreHeaders(res: express.Response): void {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+}
+
+function reconstructVentFromBody(ventId: string, rawParent: unknown): Vent | null {
+  if (!rawParent || typeof rawParent !== 'object') return null;
+  const candidate = rawParent as Partial<Vent>;
+  if (candidate.id !== ventId) return null;
+  const category = candidate.category as VentCategory;
+  if (!ALLOWED_VENT_CATEGORIES.includes(category)) return null;
+  const content = sanitizeText(candidate.content, 1200);
+  if (content.length < 8) return null;
+  const author = sanitizeText(candidate.author, 40) || 'Anônimo';
+  const createdAt =
+    typeof candidate.createdAt === 'string' && !Number.isNaN(new Date(candidate.createdAt).getTime())
+      ? candidate.createdAt
+      : new Date().toISOString();
+  const embraces =
+    typeof candidate.embraces === 'number' && Number.isFinite(candidate.embraces) && candidate.embraces >= 1
+      ? Math.floor(candidate.embraces)
+      : 1;
+  const replies = Array.isArray(candidate.replies)
+    ? candidate.replies
+        .filter((r) => r && typeof r.id === 'string' && typeof r.content === 'string')
+        .map((r) => ({
+          id: sanitizeText(r.id, 64) || makeId('rep'),
+          author: sanitizeText(r.author, 40) || 'Alguém que se importa',
+          content: sanitizeText(r.content, 600),
+          createdAt:
+            typeof r.createdAt === 'string' && !Number.isNaN(new Date(r.createdAt).getTime())
+              ? r.createdAt
+              : createdAt,
+        }))
+        .filter((r) => r.content.length >= 4)
+    : [];
+  return {
+    id: ventId,
+    author,
+    category,
+    content,
+    embraces,
+    replies,
+    createdAt,
+  };
 }
 
 const sseClients = new Set<express.Response>();
@@ -473,9 +601,15 @@ export function createAuroraApiApp(): express.Express {
 
   app.use(express.json({ limit: '64kb' }));
 
-  app.get('/api/sanctuary', (_req, res) => {
-    const store = readStore();
-    res.json(store);
+  app.get('/api/sanctuary', async (_req, res) => {
+    setNoStoreHeaders(res);
+    try {
+      const store = await withStoreLock(() => readStore());
+      res.json(store);
+    } catch (err) {
+      console.error('[Aurora GET /api/sanctuary error]:', err);
+      res.status(500).json({ error: 'Não foi possível carregar os registros da comunidade agora.' });
+    }
   });
 
   app.get('/api/sanctuary/stream', (req, res) => {
@@ -502,7 +636,8 @@ export function createAuroraApiApp(): express.Express {
     });
   });
 
-  app.post('/api/vents', (req, res) => {
+  app.post('/api/vents', async (req, res) => {
+    setNoStoreHeaders(res);
     if (isRateLimited(`vent:${getClientIp(req)}`, 6, 60_000)) {
       res.status(429).json({
         error: 'Aguarde um minuto antes de publicar outro desabafo. Estamos aqui com você.',
@@ -523,37 +658,60 @@ export function createAuroraApiApp(): express.Express {
       return;
     }
 
-    const store = readStore();
-    const newVent: Vent = {
-      id: makeId('vent'),
-      author,
-      category,
-      content,
-      embraces: 1,
-      replies: [],
-      createdAt: new Date().toISOString(),
-    };
-    store.vents.unshift(newVent);
-    if (store.vents.length > 80) store.vents.pop();
-    writeStore(store);
-    broadcastEvent('vent:created', newVent);
-    res.status(201).json(newVent);
-  });
-
-  app.post('/api/vents/:id/embrace', (req, res) => {
-    const store = readStore();
-    const vent = store.vents.find((v) => v.id === req.params.id);
-    if (!vent) {
-      res.status(404).json({ error: 'Desabafo não encontrado.' });
-      return;
+    try {
+      const newVent = await withStoreLock(async () => {
+        const store = await readStore();
+        const item: Vent = {
+          id: makeId('vent'),
+          author,
+          category,
+          content,
+          embraces: 1,
+          replies: [],
+          createdAt: new Date().toISOString(),
+        };
+        store.vents.unshift(item);
+        await writeStore(store);
+        return item;
+      });
+      broadcastEvent('vent:created', newVent);
+      res.status(201).json(newVent);
+    } catch (err) {
+      console.error('[Aurora POST /api/vents error]:', err);
+      res.status(500).json({ error: 'Não foi possível salvar seu desabafo agora. Tente novamente.' });
     }
-    vent.embraces += 1;
-    writeStore(store);
-    broadcastEvent('vent:updated', vent);
-    res.json(vent);
   });
 
-  app.post('/api/vents/:id/replies', (req, res) => {
+  app.post('/api/vents/:id/embrace', async (req, res) => {
+    setNoStoreHeaders(res);
+    try {
+      const updatedVent = await withStoreLock(async () => {
+        const store = await readStore();
+        let vent = store.vents.find((v) => v.id === req.params.id);
+        if (!vent) {
+          const recovered = reconstructVentFromBody(req.params.id, req.body?.parentVent);
+          if (!recovered) return null;
+          store.vents.unshift(recovered);
+          vent = recovered;
+        }
+        vent.embraces += 1;
+        await writeStore(store);
+        return vent;
+      });
+      if (!updatedVent) {
+        res.status(404).json({ error: 'Desabafo não encontrado.' });
+        return;
+      }
+      broadcastEvent('vent:updated', updatedVent);
+      res.json(updatedVent);
+    } catch (err) {
+      console.error('[Aurora POST /api/vents/:id/embrace error]:', err);
+      res.status(500).json({ error: 'Erro ao registrar acolhimento.' });
+    }
+  });
+
+  app.post('/api/vents/:id/replies', async (req, res) => {
+    setNoStoreHeaders(res);
     if (isRateLimited(`reply:${getClientIp(req)}`, 10, 60_000)) {
       res.status(429).json({
         error: 'Aguarde um instante antes de enviar outra resposta de apoio.',
@@ -561,12 +719,6 @@ export function createAuroraApiApp(): express.Express {
       return;
     }
 
-    const store = readStore();
-    const vent = store.vents.find((v) => v.id === req.params.id);
-    if (!vent) {
-      res.status(404).json({ error: 'Desabafo não encontrado.' });
-      return;
-    }
     const author = sanitizeText(req.body?.author, 40) || 'Alguém que se importa';
     const content = sanitizeText(req.body?.content, 600);
     if (content.length < 4) {
@@ -574,18 +726,42 @@ export function createAuroraApiApp(): express.Express {
       return;
     }
 
-    vent.replies.push({
-      id: makeId('rep'),
-      author,
-      content,
-      createdAt: new Date().toISOString(),
-    });
-    writeStore(store);
-    broadcastEvent('vent:updated', vent);
-    res.status(201).json(vent);
+    try {
+      const updatedVent = await withStoreLock(async () => {
+        const store = await readStore();
+        let vent = store.vents.find((v) => v.id === req.params.id);
+        if (!vent) {
+          const recovered = reconstructVentFromBody(req.params.id, req.body?.parentVent);
+          if (!recovered) return null;
+          store.vents.unshift(recovered);
+          vent = recovered;
+        }
+        if (!Array.isArray(vent.replies)) {
+          vent.replies = [];
+        }
+        vent.replies.push({
+          id: makeId('rep'),
+          author,
+          content,
+          createdAt: new Date().toISOString(),
+        });
+        await writeStore(store);
+        return vent;
+      });
+      if (!updatedVent) {
+        res.status(404).json({ error: 'Desabafo não encontrado.' });
+        return;
+      }
+      broadcastEvent('vent:updated', updatedVent);
+      res.status(201).json(updatedVent);
+    } catch (err) {
+      console.error('[Aurora POST /api/vents/:id/replies error]:', err);
+      res.status(500).json({ error: 'Não foi possível salvar seu comentário agora. Tente novamente.' });
+    }
   });
 
-  app.post('/api/prayers', (req, res) => {
+  app.post('/api/prayers', async (req, res) => {
+    setNoStoreHeaders(res);
     if (isRateLimited(`prayer:${getClientIp(req)}`, 6, 60_000)) {
       res.status(429).json({
         error: 'Aguarde um minuto antes de enviar outra oração.',
@@ -606,36 +782,54 @@ export function createAuroraApiApp(): express.Express {
       return;
     }
 
-    const store = readStore();
-    const newPrayer: Prayer = {
-      id: makeId('pray'),
-      author,
-      intention,
-      content,
-      prayingCount: 1,
-      createdAt: new Date().toISOString(),
-    };
-    store.prayers.unshift(newPrayer);
-    if (store.prayers.length > 60) store.prayers.pop();
-    writeStore(store);
-    broadcastEvent('prayer:created', newPrayer);
-    res.status(201).json(newPrayer);
-  });
-
-  app.post('/api/prayers/:id/pray', (req, res) => {
-    const store = readStore();
-    const prayer = store.prayers.find((p) => p.id === req.params.id);
-    if (!prayer) {
-      res.status(404).json({ error: 'Oração não encontrada.' });
-      return;
+    try {
+      const newPrayer = await withStoreLock(async () => {
+        const store = await readStore();
+        const item: Prayer = {
+          id: makeId('pray'),
+          author,
+          intention,
+          content,
+          prayingCount: 1,
+          createdAt: new Date().toISOString(),
+        };
+        store.prayers.unshift(item);
+        await writeStore(store);
+        return item;
+      });
+      broadcastEvent('prayer:created', newPrayer);
+      res.status(201).json(newPrayer);
+    } catch (err) {
+      console.error('[Aurora POST /api/prayers error]:', err);
+      res.status(500).json({ error: 'Não foi possível salvar sua oração agora. Tente novamente.' });
     }
-    prayer.prayingCount += 1;
-    writeStore(store);
-    broadcastEvent('prayer:updated', prayer);
-    res.json(prayer);
   });
 
-  app.post('/api/reasons', (req, res) => {
+  app.post('/api/prayers/:id/pray', async (req, res) => {
+    setNoStoreHeaders(res);
+    try {
+      const prayer = await withStoreLock(async () => {
+        const store = await readStore();
+        const found = store.prayers.find((p) => p.id === req.params.id);
+        if (!found) return null;
+        found.prayingCount += 1;
+        await writeStore(store);
+        return found;
+      });
+      if (!prayer) {
+        res.status(404).json({ error: 'Oração não encontrada.' });
+        return;
+      }
+      broadcastEvent('prayer:updated', prayer);
+      res.json(prayer);
+    } catch (err) {
+      console.error('[Aurora POST /api/prayers/:id/pray error]:', err);
+      res.status(500).json({ error: 'Erro ao registrar oração.' });
+    }
+  });
+
+  app.post('/api/reasons', async (req, res) => {
+    setNoStoreHeaders(res);
     if (isRateLimited(`reason:${getClientIp(req)}`, 6, 60_000)) {
       res.status(429).json({
         error: 'Aguarde um minuto antes de compartilhar outro motivo para viver.',
@@ -656,33 +850,50 @@ export function createAuroraApiApp(): express.Express {
       return;
     }
 
-    const store = readStore();
-    const newReason: ReasonToLive = {
-      id: makeId('reason'),
-      author,
-      theme,
-      content,
-      savedCount: 1,
-      createdAt: new Date().toISOString(),
-    };
-    store.reasons.unshift(newReason);
-    if (store.reasons.length > 80) store.reasons.pop();
-    writeStore(store);
-    broadcastEvent('reason:created', newReason);
-    res.status(201).json(newReason);
+    try {
+      const newReason = await withStoreLock(async () => {
+        const store = await readStore();
+        const item: ReasonToLive = {
+          id: makeId('reason'),
+          author,
+          theme,
+          content,
+          savedCount: 1,
+          createdAt: new Date().toISOString(),
+        };
+        store.reasons.unshift(item);
+        await writeStore(store);
+        return item;
+      });
+      broadcastEvent('reason:created', newReason);
+      res.status(201).json(newReason);
+    } catch (err) {
+      console.error('[Aurora POST /api/reasons error]:', err);
+      res.status(500).json({ error: 'Não foi possível salvar seu motivo agora. Tente novamente.' });
+    }
   });
 
-  app.post('/api/reasons/:id/heart', (req, res) => {
-    const store = readStore();
-    const reason = store.reasons.find((r) => r.id === req.params.id);
-    if (!reason) {
-      res.status(404).json({ error: 'Motivo não encontrado.' });
-      return;
+  app.post('/api/reasons/:id/heart', async (req, res) => {
+    setNoStoreHeaders(res);
+    try {
+      const reason = await withStoreLock(async () => {
+        const store = await readStore();
+        const found = store.reasons.find((r) => r.id === req.params.id);
+        if (!found) return null;
+        found.savedCount += 1;
+        await writeStore(store);
+        return found;
+      });
+      if (!reason) {
+        res.status(404).json({ error: 'Motivo não encontrado.' });
+        return;
+      }
+      broadcastEvent('reason:updated', reason);
+      res.json(reason);
+    } catch (err) {
+      console.error('[Aurora POST /api/reasons/:id/heart error]:', err);
+      res.status(500).json({ error: 'Erro ao guardar âncora.' });
     }
-    reason.savedCount += 1;
-    writeStore(store);
-    broadcastEvent('reason:updated', reason);
-    res.json(reason);
   });
 
   return app;

@@ -48,6 +48,7 @@ export function ReasonsToLiveSection({
   const [theme, setTheme] = useState<ReasonTheme>('Amanhã');
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const toggleSaveLocal = async (reason: ReasonToLive) => {
     const alreadySaved = savedIds.includes(reason.id);
@@ -77,8 +78,12 @@ export function ReasonsToLiveSection({
 
   const handleCreateReason = async (e: FormEvent) => {
     e.preventDefault();
+    setFeedback(null);
     const trimmed = content.trim();
-    if (trimmed.length < 6) return;
+    if (trimmed.length < 6) {
+      setFeedback({ type: 'error', text: 'Escreva um motivo com pelo menos 6 caracteres.' });
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -91,12 +96,26 @@ export function ReasonsToLiveSection({
           content: trimmed,
         }),
       });
-      if (res.ok) {
-        const created = (await res.json()) as ReasonToLive;
-        onReasonCreated(created);
-        setContent('');
-        setAuthor('');
+      const data = (await res.json().catch(() => null)) as (ReasonToLive & { error?: string }) | null;
+      if (!res.ok || !data) {
+        setFeedback({
+          type: 'error',
+          text: data?.error || 'Não foi possível publicar seu motivo agora. Tente novamente.',
+        });
+        return;
       }
+      onReasonCreated(data);
+      setContent('');
+      setAuthor('');
+      setFeedback({
+        type: 'success',
+        text: 'Seu motivo foi compartilhado no mural da esperança.',
+      });
+    } catch {
+      setFeedback({
+        type: 'error',
+        text: 'Erro de conexão ao enviar seu motivo. Tente novamente em instantes.',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -212,11 +231,27 @@ export function ReasonsToLiveSection({
                   rows={3}
                   maxLength={400}
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    if (feedback) setFeedback(null);
+                  }}
                   placeholder="Ex.: Ver minha família sorrir, sentir o sol da manhã, realizar um sonho..."
                   className="mt-1 w-full rounded-lg border border-[#DFCE91] bg-white px-2.5 py-1.5 text-base text-[#1C1917] placeholder:text-[#A8A29E] sm:mt-1.5 sm:px-3.5 sm:py-2.5 sm:text-sm"
                 />
               </div>
+
+              {feedback && (
+                <p
+                  role="status"
+                  className={`rounded-lg border px-3 py-2 text-[11.5px] leading-relaxed sm:px-3.5 sm:py-2.5 sm:text-xs ${
+                    feedback.type === 'success'
+                      ? 'border-[#13382C]/25 bg-[#13382C]/5 text-[#13382C]'
+                      : 'border-red-300 bg-red-50 text-red-800'
+                  }`}
+                >
+                  {feedback.text}
+                </p>
+              )}
 
               <button
                 type="submit"
