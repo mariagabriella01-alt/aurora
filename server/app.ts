@@ -62,196 +62,31 @@ const ALLOWED_REASON_THEMES: readonly ReasonTheme[] = [
   'Amanhã',
 ];
 
+const LEGACY_DEMO_VENT_IDS = new Set([
+  'vent-1',
+  'vent-2',
+  'vent-3',
+  'vent-4',
+  'vent-5',
+  'vent-6',
+  'vent-7',
+]);
+const LEGACY_DEMO_REPLY_IDS = new Set([
+  'rep-1',
+  'rep-2',
+  'rep-3',
+  'rep-5',
+  'rep-6',
+  'rep-7',
+]);
+const LEGACY_DEMO_PRAYER_IDS = new Set(['pray-1', 'pray-2', 'pray-3']);
+const LEGACY_DEMO_REASON_IDS = new Set(['reason-1', 'reason-2', 'reason-3', 'reason-4']);
+
 function createInitialData(): SanctuaryData {
-  const now = Date.now();
   return {
-    vents: [
-      {
-        id: 'vent-1',
-        author: 'Anônimo',
-        category: 'Vazio interior',
-        content:
-          'Acordei com aquela sensação silenciosa de que os dias estão só passando e nada parece me preencher de verdade. Não estou com raiva de ninguém, só cansado de tentar parecer bem o tempo inteiro.',
-        embraces: 14,
-        replies: [
-          {
-            id: 'rep-1',
-            author: 'Mariana S.',
-            content:
-              'Você não precisa fingir força aqui. Esse vazio muitas vezes é só a alma pedindo descanso depois de carregar peso demais por muito tempo. Respira fundo hoje, um passo pequeno já basta.',
-            createdAt: new Date(now - 1000 * 60 * 55).toISOString(),
-          },
-        ],
-        createdAt: new Date(now - 1000 * 60 * 110).toISOString(),
-      },
-      {
-        id: 'vent-2',
-        author: 'Lucas M.',
-        category: 'Ansiedade',
-        content:
-          'Minha cabeça não desacelera à noite. Fico revivendo erros antigos e com medo de não dar conta do futuro. Vim aqui só para colocar isso para fora sem medo de julgamento.',
-        embraces: 9,
-        replies: [
-          {
-            id: 'rep-2',
-            author: 'Rafael',
-            content:
-              'Já passei por muitas madrugadas assim. O que me ajudou foi lembrar que nossos pensamentos cansados à noite não são profecias. Estamos torcendo por você.',
-            createdAt: new Date(now - 1000 * 60 * 180).toISOString(),
-          },
-        ],
-        createdAt: new Date(now - 1000 * 60 * 240).toISOString(),
-      },
-      {
-        id: 'vent-3',
-        author: 'Larissa',
-        category: 'Cansaço de viver',
-        content:
-          'Tem dias em que levantar da cama parece escalar uma montanha. Não quero deixar de existir, eu só queria que a dor desse uma trégua e que eu voltasse a sentir sentido nas coisas simples.',
-        embraces: 22,
-        replies: [
-          {
-            id: 'rep-3',
-            author: 'Camila Oliveira',
-            content:
-              'Que bom que você escreveu isso e ficou mais um dia. A dor não vai mandar na sua história para sempre. Se hoje ficar pesado demais, liga no 188 ou conversa com alguém de confiança. Você importa muito.',
-            createdAt: new Date(now - 1000 * 60 * 310).toISOString(),
-          },
-        ],
-        createdAt: new Date(now - 1000 * 60 * 390).toISOString(),
-      },
-      {
-        id: 'vent-4',
-        author: 'Gabriel',
-        category: 'Recomeço',
-        content:
-          'Há seis meses eu achava que não ia conseguir atravessar meu luto e a depressão. Hoje ainda tenho dias difíceis, mas consegui tomar sol na varanda e fazer terapia. Só queria dizer para quem está no fundo do poço que a luz volta aos poucos.',
-        embraces: 31,
-        replies: [],
-        createdAt: new Date(now - 1000 * 60 * 620).toISOString(),
-      },
-      {
-        id: 'vent-5',
-        author: 'Renata C.',
-        category: 'Trabalho demais',
-        content:
-          'Sinto que minha vida virou apenas cumprir metas e responder mensagens. Quando tento descansar no fim de semana, bate uma culpa enorme, mas meu corpo já está exausto.',
-        embraces: 18,
-        replies: [
-          {
-            id: 'rep-5',
-            author: 'Bruno',
-            content:
-              'Você não é uma máquina para justificar sua existência produzindo. Descansar também é cuidado com a saúde mental. Comece desligando as notificações por uma hora hoje.',
-            createdAt: new Date(now - 1000 * 60 * 140).toISOString(),
-          },
-        ],
-        createdAt: new Date(now - 1000 * 60 * 210).toISOString(),
-      },
-      {
-        id: 'vent-6',
-        author: 'Anônimo',
-        category: 'Bullying na escola',
-        content:
-          'Ir para a escola tem sido um pesadelo. Ficam rindo do meu jeito e me deixando de lado no intervalo. Às vezes começo a acreditar nas coisas cruéis que dizem sobre mim.',
-        embraces: 25,
-        replies: [
-          {
-            id: 'rep-6',
-            author: 'Prof. Helena',
-            content:
-              'A crueldade dos outros nunca define o seu valor. Você não tem culpa pelo bullying que sofre. Por favor, conte para um adulto de confiança, coordenação ou psicólogo escolar — você merece proteção.',
-            createdAt: new Date(now - 1000 * 60 * 160).toISOString(),
-          },
-        ],
-        createdAt: new Date(now - 1000 * 60 * 290).toISOString(),
-      },
-      {
-        id: 'vent-7',
-        author: 'Sofia',
-        category: 'Comparação',
-        content:
-          'Abro as redes sociais e parece que todo mundo da minha idade já conquistou tudo, tem amigos perfeitos e uma vida feliz, enquanto eu estou aqui tentando só passar do dia de hoje.',
-        embraces: 21,
-        replies: [
-          {
-            id: 'rep-7',
-            author: 'Tiago',
-            content:
-              'Na internet a gente compara os nossos bastidores reais com o palco editado dos outros. Cada história tem um tempo diferente, e sobreviver em dias difíceis já é uma força gigante.',
-            createdAt: new Date(now - 1000 * 60 * 195).toISOString(),
-          },
-        ],
-        createdAt: new Date(now - 1000 * 60 * 350).toISOString(),
-      },
-    ],
-    prayers: [
-      {
-        id: 'pray-1',
-        author: 'Ana Paula',
-        intention: 'Pedido de oração',
-        content:
-          'Peço oração para que Deus preencha o vazio que tenho sentido no peito e renove minha vontade de continuar nos dias nublados.',
-        prayingCount: 27,
-        createdAt: new Date(now - 1000 * 60 * 95).toISOString(),
-      },
-      {
-        id: 'pray-2',
-        author: 'João Pedro',
-        intention: 'Palavra de paz',
-        content:
-          'Deus não se assusta com nossas dúvidas nem com nossas lágrimas. Mesmo quando não conseguimos orar com palavras bonitas, Ele escuta o silêncio do coração.',
-        prayingCount: 19,
-        createdAt: new Date(now - 1000 * 60 * 280).toISOString(),
-      },
-      {
-        id: 'pray-3',
-        author: 'Beatriz',
-        intention: 'Gratidão',
-        content:
-          'Agradeço a Deus por ter me sustentado numa semana em que pensei em desistir. Hoje consegui dormir em paz e conversar com minha mãe.',
-        prayingCount: 34,
-        createdAt: new Date(now - 1000 * 60 * 520).toISOString(),
-      },
-    ],
-    reasons: [
-      {
-        id: 'reason-1',
-        author: 'Helena',
-        theme: 'Amanhã',
-        content:
-          'Você ainda não conheceu todas as pessoas que vão amar profundamente o seu jeito de existir e agradecer por você ter ficado.',
-        savedCount: 41,
-        createdAt: new Date(now - 1000 * 60 * 140).toISOString(),
-      },
-      {
-        id: 'reason-2',
-        author: 'Matheus',
-        theme: 'Pequenos gestos',
-        content:
-          'Sentir a brisa fresca no rosto depois de uma chuva de fim de tarde, tomar um café passado na hora e ouvir uma música que parece entender sua alma.',
-        savedCount: 29,
-        createdAt: new Date(now - 1000 * 60 * 330).toISOString(),
-      },
-      {
-        id: 'reason-3',
-        author: 'Priscila',
-        theme: 'Fé e propósito',
-        content:
-          'A sua dor de hoje pode se tornar exatamente a ponte que vai salvar outra pessoa quando você contar que sobreviveu.',
-        savedCount: 53,
-        createdAt: new Date(now - 1000 * 60 * 480).toISOString(),
-      },
-      {
-        id: 'reason-4',
-        author: 'Daniel',
-        theme: 'Pessoas e laços',
-        content:
-          'Meu cachorro me esperando na porta sem pedir nada em troca — às vezes um vínculo simples segura a gente até o sol voltar.',
-        savedCount: 36,
-        createdAt: new Date(now - 1000 * 60 * 700).toISOString(),
-      },
-    ],
+    vents: [],
+    prayers: [],
+    reasons: [],
   };
 }
 
@@ -270,18 +105,21 @@ function normalizeStore(parsed: Partial<SanctuaryData> | null | undefined): Sanc
   if (!parsed || !Array.isArray(parsed.vents) || !Array.isArray(parsed.prayers) || !Array.isArray(parsed.reasons)) {
     return null;
   }
-  const vents = parsed.vents.map((v) => ({
-    ...v,
-    embraces: typeof v.embraces === 'number' && Number.isFinite(v.embraces) ? v.embraces : 1,
-    replies: Array.isArray(v.replies) ? v.replies : [],
-  }));
-  const seed = createInitialData();
-  const existingIds = new Set(vents.map((v) => v.id));
-  const missingSeeds = seed.vents.filter((v) => !existingIds.has(v.id));
+  const vents = parsed.vents
+    .filter((v) => v && !LEGACY_DEMO_VENT_IDS.has(v.id))
+    .map((v) => ({
+      ...v,
+      embraces: typeof v.embraces === 'number' && Number.isFinite(v.embraces) ? v.embraces : 1,
+      replies: Array.isArray(v.replies)
+        ? v.replies.filter((r) => r && !LEGACY_DEMO_REPLY_IDS.has(r.id))
+        : [],
+    }));
+  const prayers = parsed.prayers.filter((p) => p && !LEGACY_DEMO_PRAYER_IDS.has(p.id));
+  const reasons = parsed.reasons.filter((r) => r && !LEGACY_DEMO_REASON_IDS.has(r.id));
   return {
-    vents: missingSeeds.length > 0 ? [...vents, ...missingSeeds] : vents,
-    prayers: parsed.prayers,
-    reasons: parsed.reasons,
+    vents,
+    prayers,
+    reasons,
   };
 }
 
@@ -326,6 +164,11 @@ async function readStore(): Promise<SanctuaryData> {
     return seed;
   }
   const raw = fs.readFileSync(DATA_FILE, 'utf8');
+  if (!raw.trim()) {
+    const seed = createInitialData();
+    writeStoreToFile(seed);
+    return seed;
+  }
   const parsed = JSON.parse(raw) as Partial<SanctuaryData>;
   const normalized = normalizeStore(parsed);
   if (!normalized) {
@@ -599,7 +442,7 @@ export function createAuroraApiApp(): express.Express {
     });
   });
 
-  app.use(express.json({ limit: '64kb' }));
+  app.use(express.json({ limit: '256kb' }));
 
   app.get('/api/sanctuary', async (_req, res) => {
     setNoStoreHeaders(res);

@@ -294,7 +294,9 @@ export function ReasonsToLiveSection({
             <div className="mt-3.5 grid grid-cols-1 gap-3 sm:mt-5 sm:grid-cols-2 sm:gap-4">
               {displayedReasons.length === 0 ? (
                 <div className="col-span-full rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 text-center text-[13px] text-[#57534E] sm:p-8 sm:text-sm">
-                  Você ainda não guardou nenhum motivo na sua caixa. Clique em “Guardar âncora” nos cartões que tocarem seu coração.
+                  {viewMode === 'saved'
+                    ? 'Você ainda não guardou nenhum motivo na sua caixa. Clique em “Guardar âncora” nos cartões que tocarem seu coração.'
+                    : 'Ainda não temos comentários. Seja a primeira pessoa a compartilhar sua experiência! 💛'}
                 </div>
               ) : (
                 displayedReasons.map((reason) => {

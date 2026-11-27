@@ -12,6 +12,26 @@ function emptyCache(): ConfirmedCommunityCache {
   return { vents: [], prayers: [], reasons: [] };
 }
 
+const LEGACY_DEMO_VENT_IDS = new Set([
+  'vent-1',
+  'vent-2',
+  'vent-3',
+  'vent-4',
+  'vent-5',
+  'vent-6',
+  'vent-7',
+]);
+const LEGACY_DEMO_REPLY_IDS = new Set([
+  'rep-1',
+  'rep-2',
+  'rep-3',
+  'rep-5',
+  'rep-6',
+  'rep-7',
+]);
+const LEGACY_DEMO_PRAYER_IDS = new Set(['pray-1', 'pray-2', 'pray-3']);
+const LEGACY_DEMO_REASON_IDS = new Set(['reason-1', 'reason-2', 'reason-3', 'reason-4']);
+
 export function loadConfirmedCommunityCache(): ConfirmedCommunityCache {
   if (typeof window === 'undefined') return emptyCache();
   try {
@@ -19,9 +39,22 @@ export function loadConfirmedCommunityCache(): ConfirmedCommunityCache {
     if (!raw) return emptyCache();
     const parsed = JSON.parse(raw) as Partial<ConfirmedCommunityCache>;
     return {
-      vents: Array.isArray(parsed.vents) ? parsed.vents : [],
-      prayers: Array.isArray(parsed.prayers) ? parsed.prayers : [],
-      reasons: Array.isArray(parsed.reasons) ? parsed.reasons : [],
+      vents: Array.isArray(parsed.vents)
+        ? parsed.vents
+            .filter((v) => v && !LEGACY_DEMO_VENT_IDS.has(v.id))
+            .map((v) => ({
+              ...v,
+              replies: Array.isArray(v.replies)
+                ? v.replies.filter((r) => r && !LEGACY_DEMO_REPLY_IDS.has(r.id))
+                : [],
+            }))
+        : [],
+      prayers: Array.isArray(parsed.prayers)
+        ? parsed.prayers.filter((p) => p && !LEGACY_DEMO_PRAYER_IDS.has(p.id))
+        : [],
+      reasons: Array.isArray(parsed.reasons)
+        ? parsed.reasons.filter((r) => r && !LEGACY_DEMO_REASON_IDS.has(r.id))
+        : [],
     };
   } catch {
     return emptyCache();

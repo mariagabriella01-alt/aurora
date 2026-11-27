@@ -155,12 +155,12 @@ export function VentWallSection({
           content: trimmed,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setFeedback({ type: 'error', text: data.error || 'Não foi possível enviar agora.' });
+      const data = (await res.json().catch(() => null)) as (Vent & { error?: string }) | null;
+      if (!res.ok || !data) {
+        setFeedback({ type: 'error', text: data?.error || 'Não foi possível enviar agora.' });
         return;
       }
-      onVentCreated(data as Vent);
+      onVentCreated(data);
       setContent('');
       setAuthor('');
       setFeedback({
@@ -184,7 +184,9 @@ export function VentWallSection({
       const res = await fetch(`/api/vents/${vent.id}/embrace`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parentVent: vent }),
+        body: JSON.stringify({
+          parentVent: { ...vent, replies: vent.replies.slice(-20) },
+        }),
       });
       if (res.ok) {
         const updated = (await res.json()) as Vent;
@@ -212,7 +214,7 @@ export function VentWallSection({
         body: JSON.stringify({
           author: replyAuthor.trim() || 'Alguém que se importa',
           content: trimmed,
-          parentVent: vent,
+          parentVent: { ...vent, replies: vent.replies.slice(-20) },
         }),
       });
       const data = (await res.json().catch(() => null)) as (Vent & { error?: string }) | null;
@@ -490,7 +492,9 @@ export function VentWallSection({
                 </div>
               ) : filteredVents.length === 0 ? (
                 <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 text-center text-[13px] text-[#57534E] sm:p-8 sm:text-sm">
-                  Ainda não há desabafos nessa categoria. Se quiser, você pode ser a primeira pessoa a escrever.
+                  {filter === 'Todos'
+                    ? 'Ainda não temos comentários. Seja a primeira pessoa a compartilhar sua experiência! 💛'
+                    : 'Ainda não temos comentários nessa categoria. Seja a primeira pessoa a compartilhar sua experiência! 💛'}
                 </div>
               ) : (
                 filteredVents.map((vent) => (

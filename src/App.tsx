@@ -27,12 +27,8 @@ import {
 } from './utils/communitySync';
 
 export default function App() {
-  const [sanctuary, setSanctuary] = useState<SanctuaryData>({
-    vents: [],
-    prayers: [],
-    reasons: [],
-  });
-  const [loading, setLoading] = useState(true);
+  const [sanctuary, setSanctuary] = useState<SanctuaryData>(() => loadConfirmedCommunityCache());
+  const [loading, setLoading] = useState(() => loadConfirmedCommunityCache().vents.length === 0);
   const [ventFocusTrigger, setVentFocusTrigger] = useState(0);
   const [selectedTopicRequest, setSelectedTopicRequest] = useState<{
     category: VentCategory;

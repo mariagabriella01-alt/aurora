@@ -395,14 +395,14 @@ export function GodSpaceSection({
           content: trimmed,
         }),
       });
-      const data = await res.json();
-      if (res.ok) {
-        onPrayerCreated(data as Prayer);
+      const data = (await res.json().catch(() => null)) as (Prayer & { error?: string }) | null;
+      if (res.ok && data) {
+        onPrayerCreated(data);
         setContent('');
         setAuthor('');
         setFeedback('Sua oração foi recebida no mural. Outras pessoas já podem orar com você.');
       } else {
-        setFeedback(data.error || 'Não foi possível enviar sua oração.');
+        setFeedback(data?.error || 'Não foi possível enviar sua oração.');
       }
     } catch {
       setFeedback('Erro de conexão ao enviar sua oração.');
@@ -907,11 +907,16 @@ export function GodSpaceSection({
               </span>
             </div>
 
-            {prayers.map((prayer) => (
-              <article
-                key={prayer.id}
-                className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:p-5"
-              >
+            {prayers.length === 0 ? (
+              <div className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-5 text-center text-[13px] text-[#57534E] sm:p-8 sm:text-sm">
+                Ainda não temos comentários. Seja a primeira pessoa a compartilhar sua experiência! 💛
+              </div>
+            ) : (
+              prayers.map((prayer) => (
+                <article
+                  key={prayer.id}
+                  className="rounded-xl border border-[#EADCA6] bg-[#FFFDF4] p-3.5 sm:p-5"
+                >
                 <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[#57534E] sm:gap-2 sm:text-xs">
                   <span className="font-semibold text-[#8A5A10]">{prayer.author}</span>
                   <span aria-hidden="true">·</span>
@@ -937,7 +942,8 @@ export function GodSpaceSection({
                   </button>
                 </div>
               </article>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
